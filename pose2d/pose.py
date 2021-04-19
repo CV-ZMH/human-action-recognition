@@ -116,6 +116,7 @@ class Pose:
         self.img_h, self.img_w = image.shape[:2]
         self._scale_h = 1.0 * self.img_h / self.img_w
         pil_img, tensor_img = self.preprocess(image)
+        # print(tensor_img.shape)
         cmap, paf = self.model(tensor_img)
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
         counts, objects, peaks = self.parse_objects(cmap, paf) # cmap threhold=0.15, link_threshold=0.15
@@ -189,12 +190,13 @@ class Pose:
         for keypoints in all_keypoints:
             visibilities = []
             centers = {}
+
             # draw points on image
             for kp in keypoints:
                 if kp[1]==0 or kp[2]==0:
                     visibilities.append(kp[0])
                     continue
-                center = int(kp[1] * self.img_w + 0.5) , int(kp[2] * self.img_h + 0.5)
+                center = int(kp[1] * image.shape[1] + 0.5) , int(kp[2] * image.shape[0] + 0.5)
                 centers[kp[0]] = center
                 if draw_circle:
                     cv2.circle(image, center, thickness, (0, 0, 0), thickness+2)
@@ -207,6 +209,19 @@ class Pose:
                 if pair[0] < skip_from or pair[1] < skip_from: continue
                 if pair[0] in visibilities or pair[1] in visibilities: continue
                 cv2.line(image, centers[pair[0]], centers[pair[1]], self.JointColors[pair_order], 3)
+
+    @staticmethod
+    def remove_persons_with_few_joints(all_keypoints):
+        """ Remove bad skeletons before sending to the tracker"""
+        good_keypoints = []
+        for keypoints in all_keypoints:
+            no_head_keypoints = keypoints[5:, 1:]
+            num_valid_joints = sum(no_head_keypoints!=0)[0] # number of valid joints (withoud head)
+            num_leg_joints = sum(no_head_keypoints[-7:-1]!=0)[0] # number of joints for legs
+
+            if num_valid_joints >= 5 and num_leg_joints >= 0:
+                good_keypoints.append(keypoints)
+        return np.array(good_keypoints)
 # =============================================================================
 #             # draw line on image
 #             for joint in self.joint_pairs:

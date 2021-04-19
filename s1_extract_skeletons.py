@@ -8,35 +8,24 @@ from pose import Pose
 from utils.lib_tracker import Tracker
 from utils.lib_skeletons_io import ReadValidImagesAndActionTypesByTxt
 import utils.lib_commons as lib_commons
-import myutils
+# import myutils
 
-def remove_persons_with_few_joints(all_keypoints):
-    """ Remove bad skeletons before sending to the tracker"""
-    good_keypoints = []
-    for keypoints in all_keypoints:
-        no_head_keypoints = keypoints[5:, 1:]
-        num_valid_joints = sum(no_head_keypoints!=0)[0] # number of valid joints (withoud head)
-        num_leg_joints = sum(no_head_keypoints[-7:-1]!=0)[0] # number of joints for legs
-
-        if num_valid_joints >= 5 and num_leg_joints >= 0:
-            good_keypoints.append(keypoints)
-    return np.array(good_keypoints)
 
 def main():
 
     # setting
     cfg_all = lib_commons.read_yaml('config/config.yaml')
-    cfg = cfg_all['s1_extract_skeleton.py']
+    cfg = cfg_all[os.path.basename(__file__)]
 
     # input images cfg
     cfg_img_input = cfg['input']
     img_filename_fmt = cfg_img_input['img_filename_format']
 
     # Output
-    skl_filename_fmt = cfg_all['skeleton_filename_format']
-    dst_imgs_info_txt = cfg['output']['images_info_txt']
-    dst_skeletons_folder = cfg['output']['detected_skeletons_folder']
-    dst_imgs_folder = cfg['output']['viz_images_folder']
+    skeleton_filename_format = cfg_all['skeleton_filename_format']
+    dst_imgs_info_txt = cfg['output']['imgs_info_txt']
+    dst_skeletons_folder = cfg['output']['skeletons_folder']
+    dst_imgs_folder = cfg['output']['imgs_folder']
 
     # initiate pose estimator
     cfg_model = cfg['trtpose']
@@ -64,7 +53,7 @@ def main():
 
         # -- detect and draw
         all_keypoints = pose.predict(img_rgb)
-        all_keypoints = remove_persons_with_few_joints(all_keypoints)
+        all_keypoints = pose.remove_persons_with_few_joints(all_keypoints)
         pose.draw2D(img_disp, all_keypoints, draw_numbers=True)
 
         # -- Get skeleton data and save to file
@@ -75,7 +64,7 @@ def main():
         skels_to_save = [img_info + skeleton.tolist() for skeleton in dict_id2skeleton.values()]
         # -- Save result
         # Save skeleton data for training
-        filename = skl_filename_fmt.format(i)
+        filename = skeleton_filename_format.format(i)
         lib_commons.save_listlist(dst_skeletons_folder + filename, skels_to_save)
         # Save the visualized image for debug
         filename = img_filename_fmt.format(i)

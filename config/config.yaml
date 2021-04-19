@@ -1,0 +1,82 @@
+# Configurations for this project
+
+# Classes of the actions.
+# Warning: The name of training images folder should start with "${class}_".
+#     In src/s2_put_skeleton_txts_to_a_single_txt.py,
+#     The image whose label is not in `classes` will be filtered out.
+
+classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+#classes: ['lying', 'other', 'sitting', 'standing']
+
+skeleton_filename_format: "{:05d}.txt"
+
+features:
+  window_size: 5 # Number of adjacent frames for extracting features.
+
+s1_extract_skeletons.py:
+  trtpose:
+    backbone: densenet121
+    size: 512
+    weight: pose2d/weights/densenet121_baseline_att_512x512_B_epoch_160_trt.pth
+    is_trt: True
+  input:
+    img_filename_format: "{:05d}.jpg"
+    valid_imgs_txt: ../datasets/realtime_action_recognition/source_images3/valid_images.txt
+    img_folder: ../datasets/realtime_action_recognition/source_images3/
+  output:
+    skeletons_folder: &skels_folder data/raw_skeletons_512/skeleton_res/
+    imgs_info_txt: data/raw_skeletons_512/images_info.txt
+    imgs_folder: data/raw_skeletons_512/image_res/
+
+s2_combine_skeleton_txts.py:
+  input:
+    # A folder of skeleton txts. Each txt corresponds to one image.
+    skeletons_folder: *skels_folder
+  output:
+    # One txt containing all valid skeletons.
+    all_skeletons_txt: &skels_txt data/raw_skeletons_512/skeletons_info.txt
+
+s3_preprocess_features.py:
+  input:
+    all_skeletons_txt: *skels_txt
+  output:
+    processed_features: &features_x data/features_X.csv
+    processed_features_labels: &features_y data/features_Y.csv
+
+s4_train_clf.py:
+  input:
+    processed_features: *features_x
+    processed_features_labels: *features_y
+  output:
+    model_path: model/trained_classifier.pickle
+
+s5_run_action.py:
+  # Input:
+  #   For the input data_type, data_path, and model_path,
+  #   please use the command line arguments.
+  # Output:
+  #   The result video and skeleton txts will be saved to
+  #       ${args.output_folder}/${DST_FOLDER_NAME}/${video_name}
+  #       ${args.output_folder}/${DST_FOLDER_NAME}/${skeleton_folder_name}/${skeleton_filename_format}
+  #   where `DST_FOLDER_NAME` is defined in the function `get_dst_folder_name`.
+  #   In short, the input video or folder will have the same output folder name;
+  #             the input webcam will have a time stamp as the folder name.
+  settings:
+
+    source:
+      webcam_max_framerate: 10.0
+      video_sample_interval: 1
+
+    trtpose:
+       backbone: densenet121
+       size: 512
+       weight: pose2d/weights/densenet121_baseline_att_512x512_B_epoch_160_trt.pth
+       is_trt: True
+
+    display:
+      desired_rows: 480 # Resize the image and then display
+
+  output:
+    video_name: "video.avi" # save the resultant video to file
+    video_fps: 15.0 # at what frame rate to write the output video
+    skeleton_folder_name: "skeletons/"
