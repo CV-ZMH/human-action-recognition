@@ -16,24 +16,18 @@ class Pose:
     2D pose estimation
     """
     params = OrderedDict(
-            json='pose2d/weights/human_pose.json',
+            json='pose2d/human_pose.json',
             weight='pose2d/weights/densenet121_baseline_att_256x256_B_epoch_160_trt_1.4.0+cu100.pth',
             backbone='densenet121',
             is_trt=True,
             cmap_threshold=0.1,
             link_threshold=0.1
             )
-
     JointPairs = [(0, 1), (0, 2), (1, 3), (2, 4), (0, 17), # head
                   (17, 5), (17, 6), (5, 7), (6, 8), (7, 9), (8, 10), # arms
                   (17, 11), (17, 12), (11, 13), (12, 14), (13, 15), (14, 16), # legs
                   (3, 5), (4, 6) # ear to arms
                   ]
-
-    # CocoPairs = [
-    # (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10), (1, 11),
-    # (11, 12), (12, 13), (1, 0), (0, 14), (14, 16), (0, 15), (15, 17), (2, 16), (5, 17)
-    # ]   # = 19
     JointPairsRender = JointPairs[:-2]
     JointColors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
                   [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
@@ -222,19 +216,12 @@ class Pose:
             if num_valid_joints >= 5 and num_leg_joints >= 0:
                 good_keypoints.append(keypoints)
         return np.array(good_keypoints)
-# =============================================================================
-#             # draw line on image
-#             for joint in self.joint_pairs:
-#                 if joint[0] < skip_from or joint[1] < skip_from: continue
-#                 if joint[0] in visibilities or joint[1] in visibilities: continue
-#                 cv2.line(
-#                     image,
-#                     centers[joint[0]],
-#                     centers[joint[1]],
-#                     (0, 255, 0), 2)
-# =============================================================================
 
 if __name__ == '__main__':
     import os
     os.chdir('../')
-    pose = Pose(size=(512,512), weight='pose2d/weights/densenet121_baseline_att_512x512_B_epoch_160_trt.pth')
+    size = 512
+    pose = Pose(size=size, weight='pose2d/weights/densenet121_baseline_att_512x512_B_epoch_160_trt.pth')
+    x = np.ones((size, size, 3), dtype=np.uint8)
+    y = pose.predict(x)
+    print(y.shape)
