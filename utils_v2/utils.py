@@ -46,4 +46,3 @@ def get_skeletons_bboxes(all_keypoints, image):
         bboxes.append(bbox)
 
     return bboxes
-

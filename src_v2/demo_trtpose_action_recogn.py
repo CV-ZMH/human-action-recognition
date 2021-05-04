@@ -4,18 +4,16 @@ import os
 import time
 import cv2
 import argparse
-import numpy as np
 import torch
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(ROOT)
 
-from utils_v2.parser import YamlParser
-from utils_v2 import utils, vis
+from utils_v2 import utils, vis, parser
 from pose_estimation import TrtPose
 from tracking import DeepSort
 from classifier import MultiPersonClassifier
-import myutils
+# import myutils
 
 def get_args():
     ap = argparse.ArgumentParser()
@@ -26,10 +24,8 @@ def get_args():
     ap.add_argument('--config_classifier', type=str,
                         default='../configs/classifier.yaml')
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_1.mp4')
+                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_2.mp4')
 
-    ap.add_argument('--tracking', action='store_true', help='use tracking',
-                    default=True)
     ap.add_argument('--pair_iou_thresh', type=float,
                     help='iou threshold to match with tracking bbox and skeleton bbox',
                     default=0.5)
@@ -47,23 +43,19 @@ def get_args():
 
 
 def main():
-    pass
-
-if __name__ == '__main__':
-    main()
-    # configs
+    # Configs
     args = get_args()
-    cfg = YamlParser()
+    cfg = parser.YamlParser()
     cfg.merge_from_file(args.config_deepsort)
     cfg.merge_from_file(args.config_trtpose)
     cfg.merge_from_file(args.config_classifier)
 
-    # initiate video/webcam
+    # Initiate video/webcam
     cap = cv2.VideoCapture(args.src)
     assert cap.isOpened(),  f"Can't open video : {args.src}"
     filename = os.path.basename(args.src)
 
-    # initiate trtpose, deepsort and action classifier
+    # Initiate trtpose, deepsort and action classifier
     trtpose = TrtPose(**cfg.TRTPOSE)
     deepsort = DeepSort(**cfg.DEEPSORT)
     classifier = MultiPersonClassifier(**cfg.CLASSIFIER)
@@ -80,26 +72,68 @@ if __name__ == '__main__':
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
         # predict keypoints
+        start_pose = time.time()
         trtpose_keypoints = trtpose.predict(img_rgb)
-        trtpose_keypoints = trtpose.remove_persons_with_few_joints(trtpose_keypoints,
-                                                                   min_total_joints=5,
-                                                                   min_leg_joints=2,
-                                                                   include_head=True)
+        trtpose_keypoints = trtpose.remove_persons_with_few_joints(
+                                                    trtpose_keypoints,
+                                                    min_total_joints=5,
+                                                    min_leg_joints=0,
+                                                    include_head=True)
+        # change trtpose to openpose format
         openpose_keypoints = utils.trtpose_to_openpose(trtpose_keypoints)
         skeletons, _ = trtpose.keypoints_to_skeletons_list(openpose_keypoints)
 
+        # get skeletons' bboxes
         bboxes = utils.get_skeletons_bboxes(openpose_keypoints, img_bgr)
+        end_pose = time.time()
         if bboxes:
-            xywhs = torch.Tensor(bboxes)
             # pass skeleton bboxes to deepsort
-            tracks = deepsort.update(xywhs, img_rgb, pair_iou_thresh= args.pair_iou_thresh)
+            start_track = time.time()
+            xywhs = torch.as_tensor(bboxes)
+            tracks = deepsort.update(xywhs, img_rgb, args.pair_iou_thresh)
+            end_track = time.time()
+            # classify tracked skeletons' actions
             if tracks:
-                actions = classifier.classify(tracks)
+                track_keypoints = {track_id: skeletons[track['kp_index']]
+                               for track_id, track in tracks.items()}
+                actions = classifier.classify(track_keypoints)
+                # draw human pose actions info
+                vis.draw_action_recognition(img_disp, tracks, trtpose_keypoints, actions)
+
+        if frame_cnt == 0 and args.save_path:
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            os.makedirs(args.save_path, exist_ok=True)
+            save_name = os.path.join(
+                args.save_path,
+                os.path.basename(args.src[:-4]) + '_trtpose_deepsort_action.avi'
+                )
+            writer = cv2.VideoWriter(
+                save_name, fourcc, 30.0,
+                (img_disp.shape[1], img_disp.shape[0])
+                )
+            print(f'Saved video file at {save_name}')
+
+        vis.draw_frame_info(
+            img_disp,
+            frame=frame_cnt,
+            track=len(tracks) if bboxes else 0
+            )
 
         frame_cnt += 1
-        if frame_cnt > 30: break
-        # skeletons, _ = trtpose.keypoints_to_skeletons_list(all_keypoints)
+        if args.save_path:
+            writer.write(img_disp)
 
+        cv2.imshow(filename, img_disp)
+        k = cv2.waitKey(1)
+        if k == 27 or k == ord('q'):
+            break
 
+    print('Done. (%.3fs)' % (time.time() - t0))
+    if args.save_path:
+        writer.release()
     cv2.destroyAllWindows()
     cap.release()
+
+if __name__ == '__main__':
+    main()
+
