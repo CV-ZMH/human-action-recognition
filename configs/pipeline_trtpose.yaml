@@ -6,6 +6,7 @@ img_format: "{:05d}.jpg"
 
 window_size: 5 # Number of adjacent frames for extracting features.
 data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition
+extract_path: &extract_path extracted_data/raw_skeletons_512/
 
 s1_extract_trtpose_skeletons.py:
     input:
@@ -18,30 +19,44 @@ s1_extract_trtpose_skeletons.py:
     output:
         skeletons_folder: &skels_folder
             - *data_root
-            - extracted_data/raw_skeletons_512/skeleton_res/
+            - *extract_path
+            - skeleton_res/
         imgs_folder:
             - *data_root
-            - extracted_data/raw_skeletons_512/image_res/
+            - *extract_path
+            - image_res/
         imgs_info_txt:
             - *data_root
-            - extracted_data/raw_skeletons_512/images_info.txt
+            - *extract_path
+            - images_info.txt
 
-s2_preprocess_features.py:
+s2_combine_skeletons_txt.py:
     input:
         skeletons_folder: *skels_folder
     output:
+        skeletons_txt: &skels_txt
+            - *data_root
+            - *extract_path
+            - all_skeletons.txt
+
+s3_gen_features.py:
+    input:
+        skeletons_txt: *skels_txt
+    output:
         features_x: &features_x
             - *data_root
-            - extracted_data/features_X.csv
+            - *extract_path
+            - features_X.csv
         features_y: &features_y
             - *data_root
-            - extracted_data/features_Y.csv
+            - *extract_path
+            - features_Y.csv
 
-s3_train_classifier.py:
+s4_train_classifier.py:
     input:
         features_x: *features_x
         features_y: *features_y
     output:
-        model_path: ../model/action_classifier.pkl
+        model_path: ../weights/classifier/action_classifier.pkl
 
 
