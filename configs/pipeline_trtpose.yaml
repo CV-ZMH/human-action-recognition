@@ -1,0 +1,47 @@
+classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+#classes: ['lying', 'other', 'sitting', 'standing']
+
+# skeleton_format: "{:05d}.txt"
+img_format: "{:05d}.jpg"
+
+window_size: 5 # Number of adjacent frames for extracting features.
+data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition
+
+s1_extract_trtpose_skeletons.py:
+    input:
+        valid_imgs:
+            - *data_root
+            - source_images3/valid_images.txt
+        imgs_folder:
+            - *data_root
+            - source_images3/
+    output:
+        skeletons_folder: &skels_folder
+            - *data_root
+            - extracted_data/raw_skeletons_512/skeleton_res/
+        imgs_folder:
+            - *data_root
+            - extracted_data/raw_skeletons_512/image_res/
+        imgs_info_txt:
+            - *data_root
+            - extracted_data/raw_skeletons_512/images_info.txt
+
+s2_preprocess_features.py:
+    input:
+        skeletons_folder: *skels_folder
+    output:
+        features_x: &features_x
+            - *data_root
+            - extracted_data/features_X.csv
+        features_y: &features_y
+            - *data_root
+            - extracted_data/features_Y.csv
+
+s3_train_classifier.py:
+    input:
+        features_x: *features_x
+        features_y: *features_y
+    output:
+        model_path: ../model/action_classifier.pkl
+
+
