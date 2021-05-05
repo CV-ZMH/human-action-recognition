@@ -1,0 +1,4 @@
+CLASSIFIER:
+  model_path: ../weights/classifier/action_classifier.pkl
+  classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+  window_size: 5

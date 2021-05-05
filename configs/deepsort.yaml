@@ -1,0 +1,7 @@
+DEEPSORT:
+  model_path: ../weights/tracker/deepsort/reid.pth
+  max_dist: 0.1
+  max_iou_distance: 0.8
+  max_age: 200 #70
+  n_init: 3
+  nn_budget: 100 #100
