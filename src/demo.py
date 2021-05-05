@@ -5,7 +5,6 @@ import time
 import cv2
 import argparse
 import torch
-
 from utils import utils, vis, parser
 from pose_estimation import TrtPose
 from tracking import DeepSort
@@ -16,24 +15,21 @@ def get_args():
     ap.add_argument('--mode', choices=['track', 'action'], default='action',
                     help='inference mode for action recognition or tracking')
     # configs
-    ap.add_argument("--config_deepsort", type=str,
-                        default="../configs/deepsort.yaml")
-    ap.add_argument('--config_trtpose', type=str,
-                        default='../configs/trtpose.yaml')
-    ap.add_argument('--config_classifier', type=str,
-                        default='../configs/classifier.yaml')
-
+    ap.add_argument("--config_infer", type=str, default="../configs/inference_config.yaml",
+                    help='deepsort config file path')
+    ap.add_argument("--config_trtpose", type=str, default="../configs/trtpose.yaml",
+                    help='trtpose config file path')
     # inference
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4')
+                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_2.mp4')
     ap.add_argument('--pair_iou_thresh', type=float,
                     help='iou threshold to match with tracking bbox and skeleton bbox',
                     default=0.5)
     ap.add_argument('--draw_kp_numbers', action='store_true',
                     help='draw keypoints numbers info of each person',
-                    default=True)
+                    default=False)
     ap.add_argument('--save_path', type=str, help='output folder',
-                    default='../output')
+                    default=None)
 # =============================================================================
 #     ap.add_argument('--add_feature_template', action='store_true',
 #                     help='whether add or not feature template in top right corner',
@@ -46,9 +42,8 @@ def main():
     # Configs
     args = get_args()
     cfg = parser.YamlParser()
-    cfg.merge_from_file(args.config_deepsort)
+    cfg.merge_from_file(args.config_infer)
     cfg.merge_from_file(args.config_trtpose)
-    cfg.merge_from_file(args.config_classifier)
 
     # Initiate video/webcam
     cap = cv2.VideoCapture(args.src)
@@ -56,7 +51,7 @@ def main():
     filename = os.path.basename(args.src)
 
     # Initiate trtpose, deepsort and action classifier
-    trtpose = TrtPose(**cfg.TRTPOSE)
+    trtpose = TrtPose(**cfg.TRTPOSE_TRT)
     deepsort = DeepSort(**cfg.DEEPSORT)
     classifier = MultiPersonClassifier(**cfg.CLASSIFIER)
 

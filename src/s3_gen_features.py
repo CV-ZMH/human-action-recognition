@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 '''
 Load skeleton data from `skeletons_info.txt`,
 process data,
@@ -38,8 +35,6 @@ def process_features(X0, Y0, video_indices, classes, window_size=5):
             is_adding_noise=False, is_print=False)
         return X, Y
 
-# -- Main
-
 
 def main():
     '''
@@ -47,7 +42,7 @@ def main():
     and then save features and labels to .csv file.
     '''
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/pipeline_trtpose.yaml')
+    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
     window_size = cfg.window_size

@@ -1,7 +1,17 @@
-TRTPOSE:
+TRTPOSE_TRT:
   backbone: densenet121
+  is_trt: true
   size: 512
-  weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth
+  weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt_512.pth
   #densenet121_baseline_att_512x512_B_epoch_160_trt
   #densenet121_baseline_att_256x256_B_epoch_160_trt
+  json: lib/pose_estimation/trtpose/human_pose.json
+
+TRTPOSE_TORCH:
+  backbone: densenet121
+  is_trt: false
+  size: 512
+  weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160.pth
+  #densenet121_baseline_att_512x512_B_epoch_160_trt
+  #densenet121_baseline_att_256x256_B_epoch_160
   json: lib/pose_estimation/trtpose/human_pose.json

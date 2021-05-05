@@ -18,9 +18,7 @@ This script defines the functions for reading/saving images & skeletons data:
 import numpy as np
 import cv2
 import os
-import sys
-import simplejson
-from sklearn.preprocessing import OneHotEncoder
+import json
 
 
 # Image info includes: [cnt_action, cnt_clip, cnt_image, img_action_label, filepath]
@@ -133,7 +131,7 @@ class ReadValidImagesAndActionTypesByTxt(object):
         folder_path = os.path.dirname(filepath)
         os.makedirs(folder_path, exist_ok=True)
         with open(filepath, 'w') as f:
-            simplejson.dump(self.images_info, f)
+            json.dump(self.images_info, f)
 
     def read_image(self):
         '''
@@ -201,7 +199,7 @@ def load_skeleton_data(filepath, classes):
     with open(filepath, 'r') as f:
 
         # Load data
-        dataset = simplejson.load(f)
+        dataset = json.load(f)
 
         # Remove bad data. A bad data is filled with zeros.
         def is_good_data(row):

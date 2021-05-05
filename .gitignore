@@ -1,0 +1,10 @@
+__pycache__
+.ipynb_checkpoints
+*.pth
+
+# IO data folders
+data
+output
+
+# to do
+TO_DO.txt

@@ -48,6 +48,7 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
         # draw text over rectangle background
         label = actions.get(track_id, '') if actions else ''
         label = '{:d}: {}'.format(track_id, label)
+
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_COMPLEX, 0.8, thickness)[0]
         yy = (y1 - t_size[1] - 6, y1 - t_size[1] + 14) if y1 - t_size[1] - 5 > 0 \
             else (y1 + t_size[1] + 6, y1 + t_size[1])
@@ -55,8 +56,6 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
         cv2.rectangle(image, (x1, y1), (x1 + t_size[0]+1, yy[0]), color, -1)
         cv2.putText(image, label, (x1, yy[1]),
                     cv2.FONT_HERSHEY_COMPLEX, 0.8, colors['black'], thickness)
-
-#%% Draw Fuction for Trtpose
 
 def draw_persons_keypoints(image, all_keypoints, **kwargs):
     """Draw all persons' keypoints.

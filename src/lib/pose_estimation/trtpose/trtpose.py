@@ -1,25 +1,19 @@
 import json
+from PIL import Image
 from collections import OrderedDict
-import cv2
 import torch
 import torch2trt
 import numpy as np
 import torchvision.transforms as transforms
 from trt_pose import models, coco
-from PIL import Image
-from trt_pose.draw_objects import DrawObjects
 from trt_pose.parse_objects import ParseObjects
 
 
-
-
-
 class TrtPose:
-    """
-    2D pose estimation
-    """
-    params = OrderedDict(
-            json='pose_estimation/trtpose/human_pose.json',
+    """trtpose estimation"""
+
+    _params = OrderedDict(
+            json='human_pose.json',
             weight='weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160_trt_1.4.0+cu100.pth',
             backbone='densenet121',
             is_trt=True,
@@ -30,27 +24,28 @@ class TrtPose:
     @classmethod
     def _check_kwargs(cls, kwargs):
         for n in kwargs:
-            assert n in cls.params.keys(), f'Unrecognized attribute name : "{n}"'
+            assert n in cls._params.keys(), f'Unrecognized attribute name : "{n}"'
 
     def __init__(self, size, **kwargs):
         self._check_kwargs(kwargs)
-        self.__dict__.update(self.params)
+        self.__dict__.update(self._params)
         self.__dict__.update(kwargs)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         if not isinstance(size, tuple):
             size = (size, size)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.width, self.height = size
+
         # load humanpose json data
         self.meta = self.load_json(self.json)
+        self.topology = coco.coco_category_to_topology(self.meta)
+        self.parse_objects = ParseObjects(self.topology, cmap_threshold=self.cmap_threshold, link_threshold=self.link_threshold)
+
         # load is_trt model
         if self.is_trt:
             self.model  = self._load_trt_model(self.weight)
         else:
             self.model = self._load_torch_model(self.weight, backbone=self.backbone)
-
-        self.topology = coco.coco_category_to_topology(self.meta)
-        self.parse_objects = ParseObjects(self.topology, cmap_threshold=self.cmap_threshold, link_threshold=self.link_threshold)
-        self.draw_objects = DrawObjects(self.topology)
 
         # transformer
         self.transforms = transforms.Compose([
@@ -65,9 +60,8 @@ class TrtPose:
         return meta
 
     def _load_trt_model(self, model_file):
-        """
-        load converted tensorRT model
-        """
+        """load converted tensorRT model"""
+
         print(f'[INFO] Loading tensorrt trtpose model : {model_file}')
         model_trt = torch2trt.TRTModule()
         model_trt.load_state_dict(torch.load(model_file))
@@ -75,9 +69,8 @@ class TrtPose:
         return model_trt
 
     def _load_torch_model(self, model_file, backbone='densenet121'):
-        """
-        load pytorch model with resnet18 encoder or densenet121
-        """
+        """load pytorch model with resnet18 encoder or densenet121"""
+
         print(f'[INFO] Loading pytorch trtpose model with "{model_file}"')
         num_parts = len(self.meta['keypoints'])
         num_links = len(self.meta['skeleton'])
@@ -111,7 +104,7 @@ class TrtPose:
         return all_keypoints
 
     def preprocess(self, image):
-        """resize image and transform to tensor image"""
+        """Resize image and transform to tensor image"""
 
         assert isinstance(image, np.ndarray), 'image type need to be array'
         image = Image.fromarray(image).resize((self.width, self.height),
@@ -168,6 +161,7 @@ class TrtPose:
     @staticmethod
     def remove_persons_with_few_joints(all_keypoints, min_total_joints=5, min_leg_joints=2, include_head=False):
         """Remove bad skeletons before sending to the tracker"""
+
         good_keypoints = []
         for keypoints in all_keypoints:
             # include head point or not
@@ -181,10 +175,10 @@ class TrtPose:
 
 
 if __name__ == '__main__':
-    import os
-    os.chdir('../../')
+    # import os
+    # os.chdir('')
     size = 512
-    pose = TrtPose(size=size, weight='weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth')
+    pose = TrtPose(size=size, weight='../../../../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth')
     x = np.ones((size, size, 3), dtype=np.uint8)
     y = pose.predict(x)
     print(y.shape)

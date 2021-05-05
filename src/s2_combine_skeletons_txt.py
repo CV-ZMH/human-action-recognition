@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 '''
 Load skeleton data from `skeletons_info.txt`,
 process data,
@@ -13,7 +10,6 @@ import numpy as np
 from collections import defaultdict
 from tqdm import tqdm
 from tabulate import tabulate
-
 from utils import parser, utils
 
 def skeleton_loader(files):
@@ -26,8 +22,7 @@ def skeleton_loader(files):
 def main():
 
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/pipeline_trtpose.yaml')
-    cfg.merge_from_file('../configs/trtpose.yaml')
+    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
     cfg_state = cfg[os.path.basename(__file__)]
 
     ## IO folders
@@ -59,10 +54,9 @@ def main():
     with open(skeletons_txt, 'w') as f:
         json.dump(all_skeletons, f)
 
-    print(f'[INFO] Total numbers of combined skeletons: "{len(all_skeletons)}"')
     print(tabulate([list(labels_cnt.values())],
                    list(labels_cnt.keys()), 'grid'))
-
+    print(f'[INFO] Total numbers of combined skeletons: "{len(all_skeletons)}"')
 
 if __name__ == "__main__":
     main()

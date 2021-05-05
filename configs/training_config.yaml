@@ -1,9 +1,6 @@
 classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
-#classes: ['lying', 'other', 'sitting', 'standing']
 
-# skeleton_format: "{:05d}.txt"
 img_format: "{:05d}.jpg"
-
 window_size: 5 # Number of adjacent frames for extracting features.
 data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition
 extract_path: &extract_path extracted_data/raw_skeletons_512/

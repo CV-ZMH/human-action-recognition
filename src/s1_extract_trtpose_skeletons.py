@@ -11,13 +11,12 @@ from utils.skeletons_io import ReadValidImagesAndActionTypesByTxt
 from pose_estimation import TrtPose
 # from tracking import DeepSort
 
-if True:
-# def main():
+
+def main():
     t0 = time.time()
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/pipeline_trtpose.yaml')
+    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
     cfg.merge_from_file('../configs/trtpose.yaml')
-    cfg.merge_from_file('../configs/deepsort.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     img_format = cfg.img_format
 
@@ -29,7 +28,7 @@ if True:
     dst_imgs_info_txt = os.path.join(*cfg_stage.output.imgs_info_txt)
 
     # initiate trtpose
-    trtpose = TrtPose(**cfg.TRTPOSE)
+    trtpose = TrtPose(**cfg.TRTPOSE_TRT)
     # deepsort = DeepSort(**cfg.DEEPSORT)
 
      # Init output path
@@ -54,6 +53,7 @@ if True:
 
         # predict trtpose skeleton and save to file as openpose format
         trtpose_keypoints = trtpose.predict(img_rgb)
+        # remove bad skeletons
         trtpose_keypoints = trtpose.remove_persons_with_few_joints(trtpose_keypoints,
                                                                    min_total_joints=5,
                                                                    min_leg_joints=0,
@@ -81,10 +81,8 @@ if True:
         tq.set_description(f'action -> {label}')
         tq.set_postfix(num_of_person=len(trtpose_keypoints))
 
-
     tq.close()
     cv2.destroyAllWindows()
-
     t1 = time.gmtime(time.time()-t0)
     total_time = time.strftime("%H:%M:%S", t1)
 
@@ -92,8 +90,8 @@ if True:
     print(tabulate([list(images_loader.labels_info.values())],
                    list(images_loader.labels_info.keys()), 'grid'))
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
 
 
 

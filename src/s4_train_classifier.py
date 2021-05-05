@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# -*- coding: utf-8 -*-
-
 import _init_paths
 import os
 
@@ -61,7 +58,7 @@ def evaluate_model(model, classes, tr_X, tr_Y, te_X, te_Y):
 
 def main():
     # -- setting
-    cfg = parser.YamlParser(config_file='../configs/pipeline_trtpose.yaml')
+    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
 
