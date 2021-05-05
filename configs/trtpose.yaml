@@ -2,4 +2,6 @@ TRTPOSE:
   backbone: densenet121
   size: 512
   weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth
-  json: ../pose_estimation/trtpose/human_pose.json
+  #densenet121_baseline_att_512x512_B_epoch_160_trt
+  #densenet121_baseline_att_256x256_B_epoch_160_trt
+  json: lib/pose_estimation/trtpose/human_pose.json
