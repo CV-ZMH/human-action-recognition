@@ -1,11 +1,13 @@
 # Simple Multi-Person Human Activity Recognition  
 
-This is the modified combination pipeline version for multi person action recognition with pose estimation as `trt_pose`, tracking as `deepsort` and action classifier as `simple dnn classifier` . Original [repo](https://github.com/felixchenfy/Realtime-Action-Recognition) is with `tfpose`, tracking based on `euclidean distance of skeletons motions` and action classifier as `simple dnn classifier`.  
+This is the multi person action recognition pipeline with pose estimation as `trt_pose`, tracking as `deepsort` and action classifier as `simple dnn classifier` .
+
+Original [repo](https://github.com/felixchenfy/Realtime-Action-Recognition) is with `tfpose`, tracking based on `euclidean distance of skeletons motions` and action classifier as `simple dnn classifier`.  
 
 
 > 9 actions : ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
 
-|<img src="assets/aung_la_demo.gif"  width="832" height="480"/> |
+|<img src="assets/aung_la.gif"  width="720" height="480"/> |
 |:--:|
 | __Multi Person Activity Analysis Demo__ with `Pose Estimation`, `Tracking` and `Action Classifier` |
 
