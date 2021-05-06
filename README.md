@@ -7,9 +7,9 @@ Original [repo](https://github.com/felixchenfy/Realtime-Action-Recognition) is w
 
 > 9 actions : ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
 
-|<img src="assets/aung_la.gif"  width="720" height="480"/> |
+|<img src="assets/aung_la.gif"  width="480" height="320"/> |
 |:--:|
-| __Multi Person Activity Analysis Demo__ with `Pose Estimation`, `Tracking` and `Action Classifier` |
+| __Multi Person Activity Analysis Demo__ |
 
 ## Table of Contents
 
