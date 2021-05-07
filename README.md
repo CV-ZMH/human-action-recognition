@@ -20,9 +20,7 @@ Original [repo](https://github.com/felixchenfy/Realtime-Action-Recognition) is w
 ---
 ## 1. Installation
 
-Firtst, Python >= 3.6.
-
-I used the `trt_pose` from [nvidia github repo](https://github.com/NVIDIA-AI-IOT/trt_pose).
+Firtst, Python >= 3.6
 
 ### Step 1 - Install Dependencies
 
@@ -58,6 +56,7 @@ pip install -r requirements.txt
 ## 2. Quick Demo
 
 - Download the pretrained weight files to run the demo.
+
 | Model | Weight |
 |---|---|
 | *Trt_Pose* | [densenet121_backbone](https://drive.google.com/open?id=13FkJkx7evQ1WwP54UmdiDXWyFMY1OxDU) |
@@ -91,7 +90,7 @@ python demo.py --mode track --src ../test_data/fun_theory.mp4 --save_path ../out
 
 - Download the sample training dataset from [original repo](https://drive.google.com/open?id=1V8rQ5QR5q5zn1NHJhhf-6xIeDdXVtYs9)
 
-- Modify the `data_root` and `extract_path` with your IO dataset path in [configs/training_config.yaml](configs/training_config.yaml).
+- Modify the [data_root](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/training_config.yaml#L5) and [extract_path](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/training_config.yaml#L6) with your IO dataset path in [configs/training_config.yaml](configs/training_config.yaml).
 
 - Depend on your need, you may change [configs/training_config.yaml](configs/training_config.yaml).
 
