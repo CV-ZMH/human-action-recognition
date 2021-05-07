@@ -21,7 +21,7 @@ def get_args():
                     help='trtpose config file path')
     # inference
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_2.mp4')
+                    default=0)
     ap.add_argument('--pair_iou_thresh', type=float,
                     help='iou threshold to match with tracking bbox and skeleton bbox',
                     default=0.5)
@@ -48,7 +48,7 @@ def main():
     # Initiate video/webcam
     cap = cv2.VideoCapture(args.src)
     assert cap.isOpened(),  f"Can't open video : {args.src}"
-    filename = os.path.basename(args.src)
+    filename = os.path.basename(args.src) if args.src != 0 else 'webcam'
 
     # Initiate trtpose, deepsort and action classifier
     trtpose = TrtPose(**cfg.TRTPOSE_TRT)
@@ -72,7 +72,7 @@ def main():
         trtpose_keypoints = trtpose.remove_persons_with_few_joints(
                                                     trtpose_keypoints,
                                                     min_total_joints=8,
-                                                    min_leg_joints=4,
+                                                    min_leg_joints=2,
                                                     include_head=True)
         # change trtpose to openpose format
         openpose_keypoints = utils.trtpose_to_openpose(trtpose_keypoints)
@@ -109,7 +109,9 @@ def main():
             os.makedirs(args.save_path, exist_ok=True)
             save_name = os.path.join(
                 args.save_path,
-                os.path.basename(args.src[:-4]) + f'_trtpose_deepsort_{args.mode}.avi'
+                '{}_trtpose_deepsort_{}.avi'
+                .format(os.path.basename(args.src[:-4]) if args.src != 0 else 'webcam',
+                         args.mode)
                 )
             writer = cv2.VideoWriter(
                 save_name, fourcc, 20.0,
