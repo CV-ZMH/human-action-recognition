@@ -76,13 +76,18 @@ cd src && python convert_model.py
 - Run **action recogniiton**.
 ```bash
 cd src
+# for video, use --src flag to your video path
 python demo.py --mode action --src ../test_data/fun_theory.mp4 --save_path ../output
+# for webcam, use --src flag to 0
+python demo.py --mode action --src 0 --save_path ../output
 ```
 
 - Run **person skeleton tracking**.
 ```bash
-cd src
+# for video, use --src flag to your video path
 python demo.py --mode track --src ../test_data/fun_theory.mp4 --save_path ../output
+# for webcam, use --src flag to 0
+python demo.py --mode track --src 0 --save_path ../output
 ```
 ---
 
