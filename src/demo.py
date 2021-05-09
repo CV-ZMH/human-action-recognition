@@ -21,7 +21,8 @@ def get_args():
                     help='trtpose config file path')
     # inference
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default=0)
+                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_1.mp4')
+                    # default='../test_data/aung_la.mp4')
     ap.add_argument('--pair_iou_thresh', type=float,
                     help='iou threshold to match with tracking bbox and skeleton bbox',
                     default=0.5)
@@ -29,7 +30,7 @@ def get_args():
                     help='draw keypoints numbers info of each person',
                     default=False)
     ap.add_argument('--save_path', type=str, help='output folder',
-                    default=None)
+                    default='../output')
 # =============================================================================
 #     ap.add_argument('--add_feature_template', action='store_true',
 #                     help='whether add or not feature template in top right corner',
@@ -72,7 +73,7 @@ def main():
         trtpose_keypoints = trtpose.remove_persons_with_few_joints(
                                                     trtpose_keypoints,
                                                     min_total_joints=8,
-                                                    min_leg_joints=2,
+                                                    min_leg_joints=4,
                                                     include_head=True)
         # change trtpose to openpose format
         openpose_keypoints = utils.trtpose_to_openpose(trtpose_keypoints)
@@ -101,9 +102,11 @@ def main():
                     draw_numbers=args.draw_kp_numbers,
                     actions=actions if args.mode=='action' else None
                     )
-        # else:
-        #     deepsort.increment_ages() # better tracking result without this function
 
+        # else:
+            # deepsort.increment_ages() # better tracking result without this function
+
+        end_total = time.time() - start_pose
         if frame_cnt == 0 and args.save_path:
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             os.makedirs(args.save_path, exist_ok=True)
@@ -123,6 +126,7 @@ def main():
             img_disp,
             color='red',
             mode=args.mode,
+            speed = '{:.4f}s'.format(end_total),
             frame=frame_cnt,
             track=len(tracks) if bboxes else 0,
             )

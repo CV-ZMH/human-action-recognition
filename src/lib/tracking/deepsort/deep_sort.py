@@ -36,8 +36,8 @@ class DeepSort(object):
         detect_boxes = [self._xywh_to_xyxy(bbox) for bbox in bbox_xywh]
 
         detections = [Detection(bbox, features[i]) for i, bbox in enumerate(bbox_tlwh)]
-        indices = non_max_suppression(bbox_tlwh.numpy(), self.nms_max_overlap)
-        detections = [detections[i] for i in indices]
+        # indices = non_max_suppression(bbox_tlwh.numpy(), self.nms_max_overlap)
+        # detections = [detections[i] for i in indices]
 
         # update tracker
         self.tracker.predict()

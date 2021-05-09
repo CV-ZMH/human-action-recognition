@@ -10,7 +10,7 @@ TRTPOSE_TRT:
 TRTPOSE_TORCH:
   backbone: densenet121
   is_trt: false
-  size: 512
+  size: 256
   weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160.pth
   #densenet121_baseline_att_512x512_B_epoch_160_trt
   #densenet121_baseline_att_256x256_B_epoch_160
