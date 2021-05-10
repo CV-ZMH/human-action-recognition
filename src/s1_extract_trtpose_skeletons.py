@@ -18,7 +18,10 @@ def main():
     cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
     cfg.merge_from_file('../configs/trtpose.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
+
     img_format = cfg.img_format
+    weight_name = '_'.join(map(str, cfg.TRT_CFG.weight))
+    cfg.TRT_CFG.weight = os.path.join(cfg.weight_folder, weight_name)
 
     ## IO folders
     src_imgs_folder = os.path.join(*cfg_stage.input.imgs_folder)
@@ -28,7 +31,7 @@ def main():
     dst_imgs_info_txt = os.path.join(*cfg_stage.output.imgs_info_txt)
 
     # initiate trtpose
-    trtpose = TrtPose(**cfg.TRTPOSE_TRT)
+    trtpose = TrtPose(**cfg.TRTPOSE, **cfg.TRT_CFG)
     # deepsort = DeepSort(**cfg.DEEPSORT)
 
      # Init output path

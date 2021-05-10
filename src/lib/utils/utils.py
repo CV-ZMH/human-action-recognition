@@ -49,6 +49,10 @@ def get_skeletons_bboxes(all_keypoints, image):
         xmax = np.nanmax(keypoints[:,0])
         ymax = np.nanmax(keypoints[:,1])
         bbox = expand_bbox(xmin, xmax, ymin, ymax, img_w, img_h)
+
+        # discard bbox with width and height == 0
+        if bbox[2] == 0 or bbox[3] == 0:
+            continue
         bboxes.append(bbox)
 
     return bboxes

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import _init_paths
+import os
 import torch
 import torch2trt
 from utils import parser
@@ -28,13 +29,13 @@ class ModelConverter():
 def main():
     # settings
     cfg = parser.YamlParser(config_file='../configs/trtpose.yaml')
-    ## IO model files
-    weight_file = cfg.TRTPOSE_TORCH.weight
-    output_file = weight_file[:-4] + f'_trt_{cfg.TRTPOSE_TORCH.size}.pth'
+    output_name = "_".join(map(str, cfg.TRT_CFG.weight))
+    output_path = os.path.join(cfg.weight_folder, output_name)
+    cfg.TORCH_CFG.weight = os.path.join(cfg.weight_folder, cfg.TORCH_CFG.weight)
 
-    trtpose = TrtPose(**cfg.TRTPOSE_TORCH)
+    trtpose = TrtPose(**cfg.TRTPOSE, **cfg.TORCH_CFG)
     converter = ModelConverter(trtpose)
-    converter.convert_trt(trtpose.model, output_file)
+    converter.convert_trt(trtpose.model, output_path)
 
 if __name__ == '__main__':
     main()

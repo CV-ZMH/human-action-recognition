@@ -1,17 +1,18 @@
-TRTPOSE_TRT:
-  backbone: densenet121
-  is_trt: true
-  size: 512
-  weight:  /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160_trt_512.pth
-  #densenet121_baseline_att_512x512_B_epoch_160_trt
-  #densenet121_baseline_att_256x256_B_epoch_160_trt
-  json: lib/pose_estimation/trtpose/human_pose.json
+weight_folder: /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/pose_estimation/trtpose/
 
-TRTPOSE_TORCH:
-  backbone: densenet121
-  is_trt: false
-  size: 256
-  weight:  ../weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160.pth
-  #densenet121_baseline_att_512x512_B_epoch_160_trt
-  #densenet121_baseline_att_256x256_B_epoch_160
-  json: lib/pose_estimation/trtpose/human_pose.json
+TRTPOSE:
+    size: &size 256
+    backbone: &backbone densenet121
+    json: lib/pose_estimation/trtpose/human_pose.json
+
+TRT_CFG:
+    is_trt: true
+    weight:
+      - *backbone
+      - *size
+      - trt.pth
+
+TORCH_CFG:
+    is_trt: false
+    weight:  densenet121_baseline_att_256x256_B_epoch_160.pth
+

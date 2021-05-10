@@ -14,7 +14,7 @@ def draw_frame_info(img, color='red', **kwargs):
     texts = [f'{k} : {v}' for k,v in kwargs.items()]
     for i, line in enumerate(texts):
         y = y0 + i*dy
-        cv2.putText(img, line, (5, y), cv2.FONT_HERSHEY_COMPLEX, 0.8, color, 2)
+        cv2.putText(img, line, (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
 def get_color_fast(idx):
     color_pool = list(colors.values())[:-1] # no use black color for tracking bbox
