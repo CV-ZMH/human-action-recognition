@@ -59,20 +59,35 @@ pip install -r requirements.txt
 
 | Model | Weight |
 |---|---|
-| *Trt_Pose* | [densenet121_backbone](https://drive.google.com/open?id=13FkJkx7evQ1WwP54UmdiDXWyFMY1OxDU) |
-| *Deepsort*| [reid.pth](https://drive.google.com/drive/u/0/folders/1EQ847gmKlktb9lOLMQRQvA7g708Nkdkt)|
+| *Trt_Pose* | [densenet121_trtpose](https://drive.google.com/open?id=13FkJkx7evQ1WwP54UmdiDXWyFMY1OxDU) |
+| *Deepsort*| [reid.pth](https://drive.google.com/file/d/1QNPSAWiK09tAXAw2afJI7ECiYixMDoep/view?usp=sharing)|
 
 - Then put them to these folder
     - *trt_pose* weight to `weights/pose_estimation/trtpose`.
     - *deepsort* weight to `weights/tracker/deepsort/`
 
+
 - Then convert the *trt_pose* weight for `tensorrt` model.
+
+- *Note**:  **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/trtpose_config.yaml#L4) parameter in `configs/trtpose_config.yaml` file.
 ```bash
 # check the IO weight file in configs/trtpose.yaml
 cd src && python convert_model.py
 ```
 
-- Before running `demo.py`,  you need to check the config files [confiigs/inference_config.yaml](confiigs/inference_config.yaml) and [configs/trtpose.yaml](configs/trtpose.yaml)
+- Before running **`demo.py`**,  you need to check the config files [confiigs/inference_config.yaml](confiigs/inference_config.yaml) and [configs/trtpose.yaml](configs/trtpose.yaml)
+- **Arguments** (*arg mean important parameter to get better tracking accuracy and action recognition):
+    - __mode__ (action or track) - Inference mode for _Action Recognition_ or _Tracking_.
+    - __config_infer__ - inference config file path. (default=../configs/inference_config.yaml)
+    - __config_trtpose__ - trtpose config file path. (default=../configs/trtpose_config.yaml)
+    - __src__ - source file path to predict action or track. If not provided, it will use __webcam__ source as default.
+    - __pair_iou_thresh__ - this threshold is used during tracking bbox and skeleton bbox ID association with that IoU threshold as tracking post processing. (default=0.5)
+    - *__min_joints__ - minimum total joints required for  tracking and action recognition process. (default=8).
+    - *__min_leg_joints__ - minimum leg joints required for tracking and action recognition process.(default=3).
+    - __draw_kp_numbers__ - flag to draw keypoint numbers of each person during visualization.
+    - __save_folder__ - save the result video folder path. Output name format is "{source name} {mode} {trtpose input size}.avi". If  not provided, it will not save the result video.
+
+
 - Run **action recogniiton**.
 ```bash
 cd src
@@ -99,7 +114,7 @@ python demo.py --mode track --src 0 --save_path ../output
 
 - Depend on your need, you may change [configs/training_config.yaml](configs/training_config.yaml).
 
-- Then run training
+- Then run training pipeline
 ```bash
 ./run_training_trtpose_action.sh
 ```
@@ -116,4 +131,4 @@ Pose Estimation codes are inspired from [nvidia trt_pose](https://github.com/NVI
 - [ ] add more trackers like fair-mot
 - [ ] add tr_tpose estimation training code
 - [ ] add more action classifier based on LSTM
-- [ ] add speed measurement for realtime
+- [x] add speed measurement for realtime

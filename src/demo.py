@@ -5,6 +5,7 @@ import time
 import cv2
 import argparse
 import torch
+
 from utils import utils, vis, parser
 from pose_estimation import TrtPose
 from tracking import DeepSort
@@ -12,20 +13,31 @@ from classifier import MultiPersonClassifier
 
 def get_args():
     ap = argparse.ArgumentParser()
+    # configs
     ap.add_argument('--mode', choices=['track', 'action'], default='action',
                     help='inference mode for action recognition or tracking')
-    # configs
     ap.add_argument("--config_infer", type=str, default="../configs/inference_config.yaml",
                     help='deepsort config file path')
     ap.add_argument("--config_trtpose", type=str, default="../configs/trtpose.yaml",
                     help='trtpose config file path')
-    # inference
-    ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/street_walk_4.mp4')
+
+    # inference source
+    ap.add_argument('--src', help='input file for pose estimation, video or webcam')
+                    # default='/home/zmh/hdd/Test_Videos/Tracking/street_walk_4.mp4')
                     # default='../test_data/aung_la.mp4')
+
+    # thresholds for better result of tracking and action recognition
     ap.add_argument('--pair_iou_thresh', type=float,
-                    help='iou threshold to match with tracking bbox and skeleton bbox',
+                    help='IoU threshold to compare with tracking bbox and skeleton bbox IoU',
                     default=0.5)
+    ap.add_argument('--min_joints', type=int,
+                    help='minimun keypoint number threshold to use tracking and action recognition.',
+                    default=8)
+    ap.add_argument('--min_leg_joints', type=int,
+                    help='minimun legs keypoint number threshold to use tracking and action recogniton.',
+                    default=3)
+
+    # save path and visualization info
     ap.add_argument('--draw_kp_numbers', action='store_true',
                     help='draw keypoints numbers info of each person',
                     default=False)
@@ -48,9 +60,9 @@ def main():
     t0 = time.time()
 
     # Initiate video/webcam
-    cap = cv2.VideoCapture(args.src)
+    cap = cv2.VideoCapture(args.src if args.src else 0)
     assert cap.isOpened(),  f"Can't open video : {args.src}"
-    filename = os.path.basename(args.src) if args.src != 0 else 'webcam'
+    display_name = os.path.basename(args.src) if args.src else 'webcam'
 
     try:
         # weight file
@@ -60,11 +72,12 @@ def main():
         # Initiate trtpose, deepsort and action classifier
         trtpose = TrtPose(**cfg.TRTPOSE, **cfg.TRT_CFG)
         deepsort = DeepSort(**cfg.DEEPSORT)
-        classifier = MultiPersonClassifier(**cfg.CLASSIFIER)
+        if args.mode == 'action':
+            classifier = MultiPersonClassifier(**cfg.CLASSIFIER)
 
         frame_cnt = 0
-        cv2.namedWindow(filename, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
-        cv2.resizeWindow(filename, 640, 480)
+        cv2.namedWindow(display_name, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+        cv2.resizeWindow(display_name, 640, 480)
 
         # loop on captured frames
         while True:
@@ -78,8 +91,8 @@ def main():
             trtpose_keypoints = trtpose.predict(img_rgb)
             trtpose_keypoints = trtpose.remove_persons_with_few_joints(
                                                         trtpose_keypoints,
-                                                        min_total_joints=8,
-                                                        min_leg_joints=4,
+                                                        min_total_joints=args.min_joints,
+                                                        min_leg_joints=args.min_leg_joints,
                                                         include_head=True)
             # change trtpose to openpose format
             openpose_keypoints = utils.trtpose_to_openpose(trtpose_keypoints)
@@ -98,9 +111,11 @@ def main():
                 # classify tracked skeletons' actions
                 if tracks:
                     if args.mode == 'action':
+                        start_action = time.time()
                         track_keypoints = {track_id: skeletons[track['kp_index']]
                                        for track_id, track in tracks.items()}
                         actions = classifier.classify(track_keypoints)
+                        end_action = time.time() - start_action
 
                     # draw result info to image
                     vis.draw_frame(
@@ -113,20 +128,21 @@ def main():
                 # deepsort.increment_ages() # better tracking result without this function
             # print(f'frame cnt : {frame_cnt}')
             end_total = time.time() - start_pose
+
             if frame_cnt == 0 and args.save_path:
-                fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 os.makedirs(args.save_path, exist_ok=True)
+                fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 save_name = os.path.join(
-                    args.save_path,
-                    '{}_trtpose_deepsort_{}_{}.avi'
-                    .format(os.path.basename(args.src[:-4]) if args.src != 0 else 'webcam',
-                             args.mode, cfg.TRTPOSE.size)
-                    )
+                                args.save_path,
+                                '{}_trtpose_deepsort_{}_{}.avi'
+                                .format(os.path.basename(args.src[:-4]) \
+                                        if args.src else 'webcam',
+                                         args.mode, cfg.TRTPOSE.size))
+
                 writer = cv2.VideoWriter(
                     save_name, fourcc, 20.0,
                     (img_disp.shape[1], img_disp.shape[0])
                     )
-
 
             # draw information of the current frame
             vis.draw_frame_info(
@@ -135,7 +151,7 @@ def main():
                 mode=args.mode,
                 frame=frame_cnt,
                 totalSpeed = '{:.4f}s'.format(end_total),
-                trackSpeed = '{:.4f}s'.format(end_pose) if bboxes else 0,
+                trackSpeed = '{:.4f}s'.format(end_track) if bboxes else 0,
                 totalTrack=len(tracks) if bboxes else 0,
                 )
 
@@ -143,24 +159,23 @@ def main():
             if args.save_path:
                 writer.write(img_disp)
 
-            cv2.imshow(filename, img_disp)
+            cv2.imshow(display_name, img_disp)
             k = cv2.waitKey(1)
             if k == 27 or k == ord('q'):
                 break
 
-    # except Exception as e:
-    #     print(f"ERROR : {e}")
+    except Exception as e:
+        print(f"ERROR : {e}")
 
-    # else:
-    #     if args.save_path:
-    #         print(f'Saved the result video file to {save_name}')
-    #         writer.release()
+    else:
+        if args.save_path:
+            print(f'Saved the result video file to {save_name}')
+            writer.release()
 
     finally:
         print('Finished in : %.3fs' % (time.time() - t0))
         cap.release()
         cv2.destroyAllWindows()
-
 
 
 if __name__ == '__main__':
