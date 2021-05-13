@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import _init_paths
+# import warnings
+
 import os
 import time
 import cv2
@@ -9,7 +11,8 @@ import torch
 from utils import utils, vis, parser
 from pose_estimation import TrtPose
 from tracking import DeepSort
-from classifier import MultiPersonClassifier
+# from classifier import MultiPersonClassifier
+from utils.lib_classifier import MultiPersonClassifier
 
 def get_args():
     ap = argparse.ArgumentParser()
@@ -22,8 +25,8 @@ def get_args():
                     help='trtpose config file path')
 
     # inference source
-    ap.add_argument('--src', help='input file for pose estimation, video or webcam')
-                    # default='/home/zmh/hdd/Test_Videos/Tracking/street_walk_4.mp4')
+    ap.add_argument('--src', help='input file for pose estimation, video or webcam',
+                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4')
                     # default='../test_data/aung_la.mp4')
 
     # thresholds for better result of tracking and action recognition
@@ -35,13 +38,13 @@ def get_args():
                     default=8)
     ap.add_argument('--min_leg_joints', type=int,
                     help='minimun legs keypoint number threshold to use tracking and action recogniton.',
-                    default=3)
+                    default=4)
 
     # save path and visualization info
     ap.add_argument('--draw_kp_numbers', action='store_true',
                     help='draw keypoints numbers info of each person',
                     default=False)
-    ap.add_argument('--save_path', type=str, help='output folder',
+    ap.add_argument('--save_folder', type=str, help='output folder',
                     default='../output')
 # =============================================================================
 #     ap.add_argument('--add_feature_template', action='store_true',
@@ -67,6 +70,7 @@ def main():
     try:
         # weight file
         weight_name = '_'.join(map(str, cfg.TRT_CFG.weight))
+        print(f'Weight name : {weight_name}')
         cfg.TRT_CFG.weight = os.path.join(cfg.weight_folder, weight_name)
 
         # Initiate trtpose, deepsort and action classifier
@@ -129,11 +133,11 @@ def main():
             # print(f'frame cnt : {frame_cnt}')
             end_total = time.time() - start_pose
 
-            if frame_cnt == 0 and args.save_path:
-                os.makedirs(args.save_path, exist_ok=True)
+            if frame_cnt == 0 and args.save_folder:
+                os.makedirs(args.save_folder, exist_ok=True)
                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 save_name = os.path.join(
-                                args.save_path,
+                                args.save_folder,
                                 '{}_trtpose_deepsort_{}_{}.avi'
                                 .format(os.path.basename(args.src[:-4]) \
                                         if args.src else 'webcam',
@@ -156,7 +160,7 @@ def main():
                 )
 
             frame_cnt += 1
-            if args.save_path:
+            if args.save_folder:
                 writer.write(img_disp)
 
             cv2.imshow(display_name, img_disp)
@@ -164,13 +168,13 @@ def main():
             if k == 27 or k == ord('q'):
                 break
 
-    except Exception as e:
-        print(f"ERROR : {e}")
+    # except Exception as e:
+        # print(f"ERROR : {e}")
 
-    else:
-        if args.save_path:
-            print(f'Saved the result video file to {save_name}')
-            writer.release()
+    # else:
+    #     if args.save_folder:
+    #         print(f'Saved the result video file to {save_name}')
+    #         writer.release()
 
     finally:
         print('Finished in : %.3fs' % (time.time() - t0))

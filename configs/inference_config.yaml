@@ -1,13 +1,17 @@
 DEEPSORT:
   model_path: ../weights/tracker/deepsort/reid.pth
-  max_dist: 0.1
-  nms_max_overlap: 0.5
-  max_iou_distance: 0.8
-  max_age: 200 #70
+  max_dist: 0.15
+  # nms_max_overlap: 0.5
+  max_iou_distance: 0.8 # 0.8
+  max_age: 100 #70
   n_init: 3
   nn_budget: 100 #100
 
 CLASSIFIER:
-  model_path: ../weights/classifier/action_classifier.pkl
-  classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
-  window_size: 5
+  # model_path: ../weights/classifier/action_classifier.pkl
+  # classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+  # window_size: 5
+
+  model_path: ../weights/classifier/trained_classifier_GWpose_DNN.pickle
+  classes: ['sit', 'stand', 'walk', 'falling']
+  window_size: 8
