@@ -7,7 +7,6 @@ from collections import namedtuple, OrderedDict
 from itertools import product
 
 import pandas as pd
-from tabulate import tabulate
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
@@ -105,8 +104,8 @@ class Runner:
         results["epoch"] = self.epoch_count
         results['train loss'] = self.train_loss
         results["train accuracy"] = self.train_accuracy
-        results['train duration'] = self.train_duration
-        results['val loss'] = self.val_loss
+        results["train duration"] = self.train_duration
+        results["val loss"] = self.val_loss
         results["val accuracy"] = self.val_accuracy
         results['val duration'] = self.val_duration
         results['run duration'] = run_duration
@@ -123,10 +122,10 @@ class Runner:
     def track_loss(self, loss, images):
         self.total_loss += loss.item() * images.shape[0]
 
-    def track_num_correct(self, preds, labels):
-        self.total_num_correct += self._get_num_correct(preds, labels)
+    def track_num_correct(self, num_correct):
+        self.total_num_correct += num_correct
 
-    def _get_num_correct(self, preds, labels):
+    def get_num_correct(self, preds, labels):
         return preds.argmax(dim=1).eq(labels).sum().item()
 
     def save(self, filename):

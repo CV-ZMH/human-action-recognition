@@ -19,7 +19,7 @@ train:
     val_interval: 5
 
 params:
-    lr: [0.01, 0.001]
+    lr: [0.09, 0.009]
     optim: [SGD, Adam]
     gaussian_mask: [False]
     reduce_lr: [True, False]

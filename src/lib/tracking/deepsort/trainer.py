@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from collections import namedtuple, OrderedDict
 from tqdm import tqdm
 
 import torch
@@ -125,7 +124,7 @@ class Trainer:
             # scheduler
             if getattr(run, 'reduce_lr', False):
                 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    optimizer, factor=0.1, patience=10, verbose=True
+                    optimizer, factor=0.5, patience=5, verbose=True
                     )
 
             # epoch loop
@@ -134,7 +133,7 @@ class Trainer:
                 runner.begin_epoch()
 
                 # training loop
-                tq_template = "Epoch: [{}/{}] Iter: [{}/{}] LR: {} Loss: {:.8f}"
+                tq_template = "Epoch: [{}/{}] Iter: [{}/{}] LR: {} Num Correct: {} Loss: {:.8f}"
                 # tq = tqdm(enumerate(self.train_loader), total=len(self.train_loader),
                 #           desc=tq_template.format(
                 #               epoch+1, self.cfg.train.epoch,
@@ -158,15 +157,15 @@ class Trainer:
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
+                    acc = runner.get_num_correct(preds, labels)
+                    runner.track_loss(loss, tfms_images)
+                    runner.track_num_correct(acc)
                     tq.set_description(tq_template.format(
                             epoch+1, self.cfg.train.epoch,
                             i_iter, len(self.train_loader),
                             optimizer.param_groups[0]['lr'],
-                            loss.item()
+                            acc, loss.item()
                         ))
-
-                    runner.track_loss(loss, tfms_images)
-                    runner.track_num_correct(preds, labels)
                     # break
                 runner.add_tb_data(status='train')
                 checkpoint_file = os.path.join(
@@ -194,11 +193,12 @@ class Trainer:
                             tfms_images = norm(images)
                             preds = net(tfms_images )
                             loss = criterion(preds, labels)
+                            val_acc = runner.get_num_correct(preds, labels)
                             runner.track_loss(loss, tfms_images)
-                            runner.track_num_correct(preds, labels)
+                            runner.track_num_correct(val_acc)
                             # break
                         runner.add_tb_data(status='val')
-                    print(f"Val Loss: {runner.val_loss:.3f} Best Acc: {self.best_acc}")
+                    print(f"Val Loss: {runner.val_loss:.3f} Val Acc: {runner.val_accuracy}")
 
                     if runner.val_accuracy > self.best_acc:
                         self.best_acc = runner.val_accuracy
@@ -206,7 +206,7 @@ class Trainer:
 
                 # add all epoch record data in tensorboard
                 if getattr(run, 'reduce_lr', False):
-                    scheduler.step()
+                    scheduler.step(runner.train_loss)
                 runner.end_epoch(images=images)
             runner.end_run()
             self.best_acc = 0
