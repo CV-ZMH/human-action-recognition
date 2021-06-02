@@ -7,7 +7,7 @@ class YamlParser(dict):
     """
     This is yaml parser to access data with attribute or dict
     """
-    def __init__(self, data=None, config_file=None):
+    def __init__(self, config_file=None, data=None):
         if data is None:
             data = {}
         for k, v in data.items():
@@ -17,7 +17,7 @@ class YamlParser(dict):
 
     def __setattr__(self, name, value):
         if isinstance(value, dict):
-            value = self.__class__(value)
+            value = self.__class__(data=value)
         super(YamlParser, self).__setitem__(name, value)
         super(YamlParser, self).__setattr__(name, value)
 

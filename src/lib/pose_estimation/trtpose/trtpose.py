@@ -31,7 +31,7 @@ class TrtPose:
         self.__dict__.update(self._params)
         self.__dict__.update(kwargs)
 
-        if not isinstance(size, tuple):
+        if not isinstance(size, (tuple, list)):
             size = (size, size)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.width, self.height = size
@@ -178,7 +178,8 @@ if __name__ == '__main__':
     # import os
     # os.chdir('')
     size = 512
-    pose = TrtPose(size=size, weight='../../../../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth')
+    weight = '../../../../weights/pose_estimation/trtpose/densenet121_baseline_att_512x512_B_epoch_160_trt.pth'
+    pose_estimator = TrtPose(size=size, weight=weight)
     x = np.ones((size, size, 3), dtype=np.uint8)
-    y = pose.predict(x)
+    y = pose_estimator.predict(x)
     print(y.shape)

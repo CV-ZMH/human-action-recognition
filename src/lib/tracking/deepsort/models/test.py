@@ -5,7 +5,7 @@ import torchvision
 import argparse
 import os
 
-from model import Net
+from wide_resnet import WideResnet
 
 parser = argparse.ArgumentParser(description="Train on market1501")
 parser.add_argument("--data-dir", default='data', type=str)
@@ -39,7 +39,7 @@ galleryloader = torch.utils.data.DataLoader(
 )
 
 # net definition
-net = Net(reid=True)
+net = WideResnet(reid=True)
 assert os.path.isfile(
     "./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
 print('Loading from checkpoint/ckpt.t7')

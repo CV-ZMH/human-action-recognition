@@ -1,32 +1,30 @@
 import numpy as np
 import torch
 
-from .deep.feature_extractor import Extractor
 from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.preprocessing import non_max_suppression
 from .sort.detection import Detection
 from .sort.tracker import Tracker
-
+from .models.get_extractor import Extractor
 
 __all__ = ['DeepSort']
 
 
 class DeepSort(object):
-    def __init__(self, model_path, max_dist=0.2, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
+    def __init__(self, reid_net, max_dist=0.2, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
         # self.min_confidence = min_confidence
         self.nms_max_overlap = nms_max_overlap
 
-        self.extractor = Extractor(model_path, use_cuda=use_cuda)
+        self.extractor = Extractor(reid_net, use_cuda=use_cuda)
 
-        max_cosine_distance = max_dist
         metric = NearestNeighborDistanceMetric(
-            "cosine", max_cosine_distance, nn_budget)
+            "cosine", max_dist, nn_budget)
         self.tracker = Tracker(
             metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
     def update(self, bbox_xywh, ori_img, pair_iou_thresh=0.6):
         """Update tracking analysis from keypoints' bbox and
-        get the tracking id pair with keypoints'd bbox index
+        get the tracking id matching with keypoints'd bbox index
         """
 
         self.height, self.width = ori_img.shape[:2]

@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -51,12 +52,12 @@ def make_layers(c_in, c_out, repeat_times, is_downsample=False):
     return nn.Sequential(*blocks)
 
 
-class Net(nn.Module):
+class WideResnet(nn.Module):
     def __init__(self, num_classes=751, reid=False):
-        super(Net, self).__init__()
+        super(WideResnet, self).__init__()
         # 3 128 64
         self.conv = nn.Sequential(
-            nn.Conv2d(3, 64, 3, stride=1, padding=1),
+            nn.Conv2d(3, 64, 3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             # nn.Conv2d(32,32,3,stride=1,padding=1),
@@ -65,16 +66,16 @@ class Net(nn.Module):
             nn.MaxPool2d(3, 2, padding=1),
         )
         # 32 64 32
-        self.layer1 = make_layers(64, 64, 2, False)
+        self.layer1 = make_layers(64, 64, repeat_times=2, is_downsample=False)
         # 32 64 32
-        self.layer2 = make_layers(64, 128, 2, True)
+        self.layer2 = make_layers(64, 128, repeat_times=2, is_downsample=True)
         # 64 32 16
-        self.layer3 = make_layers(128, 256, 2, True)
+        self.layer3 = make_layers(128, 256, repeat_times=2, is_downsample=True)
         # 128 16 8
-        self.layer4 = make_layers(256, 512, 2, True)
+        self.layer4 = make_layers(256, 512, repeat_times=2, is_downsample=True)
         # 256 8 4
-        self.avgpool = nn.AvgPool2d((8, 4), 1)
-        # 256 1 1
+        self.avgpool = nn.AvgPool2d((8*2, 4*2), 1)
+        # 512 1 1
         self.reid = reid
         self.classifier = nn.Sequential(
             nn.Linear(512, 256),
@@ -83,6 +84,7 @@ class Net(nn.Module):
             nn.Dropout(),
             nn.Linear(256, num_classes),
         )
+        self._init_weights()
 
     def forward(self, x):
         x = self.conv(x)
@@ -94,16 +96,25 @@ class Net(nn.Module):
         x = x.view(x.size(0), -1)
         # B x 128
         if self.reid:
-            x = x.div(x.norm(p=2, dim=1, keepdim=True))
+            x = x.div(x.norm(p=2, dim=1, keepdim=True)) # p=2, same like frobinius norm
             return x
         # classifier
         x = self.classifier(x)
         return x
 
+    def _init_weights(self):
+        for name, m in self.named_modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+            elif isinstance(m, (nn.BatchNorm2d)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
 
 if __name__ == '__main__':
-    net = Net()
+    net = WideResnet()
     x = torch.randn(4, 3, 128, 64)
     y = net(x)
-    import ipdb
-    ipdb.set_trace()

@@ -1,9 +1,10 @@
+Tracker:
 DEEPSORT:
-  model_path: ../weights/tracker/deepsort/reid.pth
+  reid_net: wideresnet # [wideresnet, siamese]
   max_dist: 0.15
   # nms_max_overlap: 0.5
   max_iou_distance: 0.8 # 0.8
-  max_age: 100 #70
+  max_age: 70 #70
   n_init: 3
   nn_budget: 100 #100
 
@@ -12,6 +13,7 @@ CLASSIFIER:
   # classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
   # window_size: 5
 
+  # ko zeyan model
   model_path: ../weights/classifier/trained_classifier_GWpose_DNN.pickle
   classes: ['sit', 'stand', 'walk', 'falling']
   window_size: 8

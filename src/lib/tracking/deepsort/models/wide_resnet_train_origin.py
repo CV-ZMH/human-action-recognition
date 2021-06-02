@@ -1,14 +1,12 @@
 import argparse
 import os
 import time
-
-import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.backends.cudnn as cudnn
 import torchvision
 
-from model import Net
+from wide_resnet import WideResnet
 
 parser = argparse.ArgumentParser(description="Train on market1501")
 parser.add_argument("--data-dir", default='data', type=str)
@@ -55,7 +53,7 @@ num_classes = max(len(trainloader.dataset.classes),
 
 # net definition
 start_epoch = 0
-net = Net(num_classes=num_classes)
+net = WideResnet(num_classes=num_classes)
 if args.resume:
     assert os.path.isfile(
         "./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"

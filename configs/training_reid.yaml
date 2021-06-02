@@ -1,0 +1,30 @@
+dataset:
+    name: market # market, mars
+    root: /home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501
+    workers: 0
+    batch_size: 32
+    gaussian_mask: True
+    size: [256, 128] # height, width
+    mean: [0.1736, 0.1613, 0.1606]
+    std: [0.1523, 0.1429, 0.1443]
+
+# Market Train = [0.1736, 0.1613, 0.1606], [0.1523, 0.1429, 0.1443]
+# Mars Train = [0.1682, 0.1585, 0.1548], [0.1436, 0.1364, 0.1341]
+
+train:
+    pretrained: '' # resume model file path
+    # lr: 0.01
+    epoch: 100
+    save_interval: 3
+    val_interval: 5
+
+params:
+    lr: [0.01, 0.001]
+    optim: [SGD, Adam]
+    gaussian_mask: [False]
+    reduce_lr: [True, False]
+
+# model save path
+weight_root: /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/tracker/deepsort/
+GPU: 0 # -1 = 'cpu' (OR) 0, 1 => GPU-ID
+reid_net: 'wideresnet' # wideresnet, siamese
