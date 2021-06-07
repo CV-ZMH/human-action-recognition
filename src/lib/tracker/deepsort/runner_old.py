@@ -33,11 +33,11 @@ class Runner:
         self.tb = None
         self.tb_folder = tb_folder
 
-        self.train_loader = None
+        # self.train_loader = None
         self.train_duration = None
         self.train_loss = 0
         self.train_accuracy = 0
-        self.val_loader = None
+        # self.val_loader = None
         self.val_duration = None
         self.val_loss = 0
         self.val_accuracy = 0
@@ -95,9 +95,9 @@ class Runner:
             self.tb.add_image('images batch', grid, dataformats='CHW')
             self.tb.add_graph(self.network, images[0:1])
 
-        for name, param in self.network.named_parameters():
-            self.tb.add_histogram(name, param, self.epoch_count)
-            self.tb.add_histogram(f'{name}.grad', param.grad, self.epoch_count)
+        # for name, param in self.network.named_parameters():
+        #     self.tb.add_histogram(name, param, self.epoch_count)
+        #     self.tb.add_histogram(f'{name}.grad', param.grad, self.epoch_count)
 
         results = OrderedDict()
         results["run"] = self.run_count

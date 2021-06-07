@@ -1,30 +1,29 @@
-dataset:
+DATASET:
     name: market # market, mars
-    root: /home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501
-    workers: 0
+    data_path: &data_path /home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501
+    workers: 1
     batch_size: 32
-    gaussian_mask: True
-    size: [256, 128] # height, width
+    img_size:
+        - 256 # height
+        - 128 # width
     mean: [0.1736, 0.1613, 0.1606]
     std: [0.1523, 0.1429, 0.1443]
 
 # Market Train = [0.1736, 0.1613, 0.1606], [0.1523, 0.1429, 0.1443]
-# Mars Train = [0.1682, 0.1585, 0.1548], [0.1436, 0.1364, 0.1341]
 
-train:
-    pretrained: '' # resume model file path
-    # lr: 0.01
-    epoch: 100
-    save_interval: 3
-    val_interval: 5
+TRAIN:
+    fixed_params:
+        gpu: 0 # -1 = 'cpu' (OR) 0, 1 = GPU-ID
+        reid_net: &reid_net 'siamesenet' # wideresnet, siamesenet
+        pretrained: "" # resume model file path
+        total_epoch: 100
+        scheduler: 'reduce_lr'
+        save_root:
+            - *data_path
+            - save_checkpoints
+            - *reid_net
 
-params:
-    lr: [0.09, 0.009]
-    optim: [SGD, Adam]
-    gaussian_mask: [False]
-    reduce_lr: [True, False]
-
-# model save path
-weight_root: /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/tracker/deepsort/
-GPU: 0 # -1 = 'cpu' (OR) 0, 1 => GPU-ID
-reid_net: 'wideresnet' # wideresnet, siamese
+    tune_params: # hyper parameter tuning
+        lr: [0.01, 0.009]
+        optim: [SGD, Adam]
+        gaussian_mask: [True, False]

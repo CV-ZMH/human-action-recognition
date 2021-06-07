@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import _init_paths
-# import warnings
-
 import os
 import time
 import cv2
@@ -14,10 +12,11 @@ from tracking import DeepSort
 # from classifier import MultiPersonClassifier
 from utils.lib_classifier import MultiPersonClassifier
 
+
 def get_args():
     ap = argparse.ArgumentParser()
     # configs
-    ap.add_argument('--mode', choices=['track', 'action'], default='action',
+    ap.add_argument('--mode', choices=['track', 'action'], default='track',
                     help='inference mode for action recognition or tracking')
     ap.add_argument("--config_infer", type=str, default="../configs/inference_config.yaml",
                     help='deepsort config file path')
@@ -26,7 +25,7 @@ def get_args():
 
     # inference source
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4')
+                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_2.mp4')
                     # default='../test_data/aung_la.mp4')
 
     # thresholds for better result of tracking and action recognition

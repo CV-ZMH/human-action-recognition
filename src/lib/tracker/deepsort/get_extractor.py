@@ -4,17 +4,9 @@ import numpy as np
 
 import torch
 import torchvision.transforms as transforms
-from .wide_resnet import WideResnet
-from .siamese_net import SiameseNet
+from .models import get_model
 
 model_root = '/home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/tracker/deepsort'
-_reid_model = {
-        'wideresnet' : WideResnet,
-        'siamesenet' : SiameseNet,
-        }
-
-def get_model(reid_net,  num_classes=None, reid=False):
-    return _reid_model[reid_net](num_classes=num_classes, reid=reid)
 
 
 class Extractor(object):
@@ -28,13 +20,9 @@ class Extractor(object):
         ])
 
     def load_model(self, reid_net):
-        assert reid_net in _reid_model, f"""
-        Error loading reid net {reid_net}.
-        Use one of this network {list(_reid_model.keys())}
-        """
         model_path = os.path.join(model_root, f'{reid_net}_reid.pth')
         print(f'[INFO] Loading deepsort reid model : {model_path}')
-        net = _reid_model[reid_net](reid=True)
+        net = get_model(reid_net, reid=True)
         state_dict = torch.load(model_path, map_location=lambda storage, loc: storage)
         net.load_state_dict(state_dict['net_dict'])
         net.to(self.device).eval() # add eval() for ineference mode

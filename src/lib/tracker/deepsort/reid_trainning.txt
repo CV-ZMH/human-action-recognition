@@ -1,0 +1,24 @@
+Training
+# run loop
+
+    1. build trainer
+        # general training loop
+        methods
+            - [x] move 'get_tqdm_iter'  method to runner class
+
+    2. build runner
+       # control
+            - training / testing variables
+            - classifier / siamese network
+            - tensorboard writer
+            - loss calculation / track loss
+            - metric (acc score) calculation / track scores
+            - after finished train / test, write loss, scores, images preidction
+            - after finished epoch, append the result data to write json and csv
+            - after finished a run, reset the variables and close tensorboard
+            - save the result data to csv and json files
+
+
+#%%
+trainer = trainer(runner, data_loaders, model, loss_fn, metrics)
+trainer.fit(total_epoch, start_lr)

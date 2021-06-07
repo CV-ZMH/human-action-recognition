@@ -22,24 +22,3 @@ cudnn.enabled = True
 cudnn.deterministic = True
 
 
-def get_parser():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--train_config", type=str, default="../../../../configs/training_siamese.yaml",
-                    help='training siamese config file path')
-    args = ap.parse_args()
-
-    # load training configs
-    cfg = parser.YamlParser(config_file=args.train_config)
-    return cfg
-
-
-
-class Trainer:
-    def __init__(self):
-        self.cfg = get_parser()
-
-    def train(self):
-        pass
-
-if __name__ == '__main__':
-    trainer = Trainer()

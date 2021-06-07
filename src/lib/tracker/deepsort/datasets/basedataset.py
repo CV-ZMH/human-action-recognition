@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import Dataset
 
@@ -16,3 +17,6 @@ class BaseDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
+
+    def normalize(self, mean, std):
+        self.norm = transforms.Normalize(mean, std)

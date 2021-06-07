@@ -8,8 +8,9 @@ from torch.backends import cudnn
 from torch.utils.data import DataLoader
 
 from runner import Runner, RunBuilder
-from datasets import get_transforms, get_dataset, get_gaussian_mask
-from models.get_extractor import get_model
+from models import get_model, TripletLoss
+from datasets import *
+
 
 class Trainer:
     def __init__(self, cfg):
@@ -64,10 +65,10 @@ class Trainer:
             self.cfg.reid_net,
             cfg_loader.name,
             root=root,
-            mode='val',
+            mode='train',
             tfms=tfms)
         self.train_loader = DataLoader(
-            train_dataset, shuffle=False,
+            train_dataset, shuffle=True,
             batch_size=cfg_loader.batch_size,
             num_workers=cfg_loader.workers)
 
@@ -89,14 +90,14 @@ class Trainer:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         print(f'[INFO] Saving checkpoint to {filename}')
         checkpoint = {
-            'net_dict' : net.state_dict,
+            'net_dict' : net.state_dict(),
             'acc' : self.best_acc,
             'epoch' : epoch,
             'lr' : lr
             }
         torch.save(checkpoint, filename)
 
-    def train(self):
+    def train_wideresnet(self):
         # initiate runner
         tb_folder = os.path.join(self.save_root, 'runs')
         runner = Runner(tb_folder=tb_folder)
@@ -104,14 +105,17 @@ class Trainer:
         # normalization with custom dataset's mean and std
         norm = transforms.Normalize(self.cfg.dataset.mean, self.cfg.dataset.std)
         for run in self.runs:
-            print(run)
+            print(f'[INFO] {run}')
             # get network
             self.lr = run.lr
             net = self.load_model(self.cfg.reid_net, self.cfg.train.pretrained)
             # init tensorboard and add the data
             runner.begin_run(run, net, self.train_loader, self.val_loader)
             # loss
-            criterion = torch.nn.CrossEntropyLoss()
+            if run.reid_net == 'siamese':
+                criterion = TripletLoss()
+            elif run.reid_net == 'wideresnet':
+                criterion = torch.nn.CrossEntropyLoss()
             # optimizer
             if run.optim == 'SGD':
                 optimizer = torch.optim.SGD(
@@ -133,17 +137,14 @@ class Trainer:
                 runner.begin_epoch()
 
                 # training loop
-                tq_template = "Epoch: [{}/{}] Iter: [{}/{}] LR: {} Num Correct: {} Loss: {:.8f}"
-                # tq = tqdm(enumerate(self.train_loader), total=len(self.train_loader),
-                #           desc=tq_template.format(
-                #               epoch+1, self.cfg.train.epoch,
-                #               0, len(self.train_loader),
-                #               self.lr, 0)
-                #           )
-                images, labels = next(iter(self.train_loader))
-                # for i_iter, (images, labels) in tq:
-                tq = tqdm(range(1))
-                for i_iter in tq:
+                tq_template = "Epoch: [{}/{}] Iter: [{}/{}] LR: {} Loss: {:.8f}"
+                tq = tqdm(enumerate(self.train_loader),
+                          desc=tq_template.format(
+                              epoch+1, self.cfg.train.epoch,
+                              0, len(self.train_loader),
+                              self.lr, 0)
+                          )
+                for i_iter, (images, labels) in tq:
                     images, labels = images.to(self.device), labels.to(self.device)
 
                     # muliply with mask and then normalize
@@ -160,53 +161,47 @@ class Trainer:
                     acc = runner.get_num_correct(preds, labels)
                     runner.track_loss(loss, tfms_images)
                     runner.track_num_correct(acc)
-                    tq.set_description(tq_template.format(
+                    tq.set_description(
+                        tq_template.format(
                             epoch+1, self.cfg.train.epoch,
                             i_iter, len(self.train_loader),
                             optimizer.param_groups[0]['lr'],
-                            acc, loss.item()
+                            loss.item()
                         ))
                     # break
                 runner.add_tb_data(status='train')
-                checkpoint_file = os.path.join(
-                        self.save_root,
-                        'checkpoints',
-                        f'epoch_{epoch}-{self.best_acc}.pth')
-
-                if epoch+1 % self.cfg.train.save_interval == 0:
-                    self.save_checkpoint(checkpoint_file, net, epoch, optimizer.param_groups[0]['lr'])
                 torch.cuda.empty_cache()
 
                 # validation loop
-                # if epoch+1 % self.cfg.train.val_interval == 0:
-                if epoch+1 == self.cfg.train.epoch:
-                    print('Validation ...')
-                    net.eval()
-                    with torch.no_grad():
-                        for images, labels in tqdm(self.val_loader):
-                            images, labels = images.to(self.device), labels.to(self.device)
-                            # muliply with mask and then normalize
-                            if getattr(run, 'gaussian_mask', False):
-                                mask = get_gaussian_mask(*self.cfg.dataset.size) #
-                                images = images * mask.to(self.device)
+                print('Validation ...')
+                net.eval()
+                with torch.no_grad():
+                    for images, labels in tqdm(self.val_loader):
+                        images, labels = images.to(self.device), labels.to(self.device)
+                        # muliply with mask and then normalize
+                        if getattr(run, 'gaussian_mask', False):
+                            mask = get_gaussian_mask(*self.cfg.dataset.size) #
+                            images = images * mask.to(self.device)
 
-                            tfms_images = norm(images)
-                            preds = net(tfms_images )
-                            loss = criterion(preds, labels)
-                            val_acc = runner.get_num_correct(preds, labels)
-                            runner.track_loss(loss, tfms_images)
-                            runner.track_num_correct(val_acc)
-                            # break
-                        runner.add_tb_data(status='val')
-                    print(f"Val Loss: {runner.val_loss:.3f} Val Acc: {runner.val_accuracy}")
-
-                    if runner.val_accuracy > self.best_acc:
-                        self.best_acc = runner.val_accuracy
-                        self.save_checkpoint(checkpoint_file, net, epoch, optimizer.param_groups[0]['lr'])
+                        tfms_images = norm(images)
+                        preds = net(tfms_images )
+                        loss = criterion(preds, labels)
+                        val_acc = runner.get_num_correct(preds, labels)
+                        runner.track_loss(loss, tfms_images)
+                        runner.track_num_correct(val_acc)
+                        # break
+                    runner.add_tb_data(status='val')
+                print(f"Val Loss: {runner.val_loss:.3f} Val Acc: {runner.val_accuracy}")
+                if runner.val_accuracy > self.best_acc:
+                    self.best_acc = runner.val_accuracy
+                    checkpoint_file = os.path.join(
+                        self.save_root, 'checkpoints', f'{run}',
+                        f'epoch_{epoch+1}-{100*self.best_acc}.pth')
+                    self.save_checkpoint(checkpoint_file, net, epoch, optimizer.param_groups[0]['lr'])
 
                 # add all epoch record data in tensorboard
                 if getattr(run, 'reduce_lr', False):
-                    scheduler.step(runner.train_loss)
+                    scheduler.step(runner.val_loss)
                 runner.end_epoch(images=images)
             runner.end_run()
             self.best_acc = 0
@@ -222,4 +217,7 @@ if __name__ == '__main__':
     cfg_file = os.path.join(root, '../configs/training_reid.yaml')
     cfg = parser.YamlParser(config_file=cfg_file)
     trainer = Trainer(cfg)
-    trainer.train()
+    if cfg.reid_net == 'wideresnet':
+        trainer.train_wideresnet()
+    elif cfg.reid_net == 'siamesenet':
+        trainer.train_siamese()# -*- coding: utf-8 -*-

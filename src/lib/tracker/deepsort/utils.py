@@ -8,6 +8,18 @@ import numpy as np
 from torchvision import transforms
 from scipy.stats import multivariate_normal
 
+
+def show_tensor(tensor):
+    np_img = tensor.cpu().numpy().transpose(1, 2, 0)
+    cv2.namedWindow('display', cv2.WND_PROP_FULLSCREEN)
+    try:
+        cv2.imshow('display', np_img[...,::-1])
+        cv2.waitKey(0)
+    except Exception as e:
+        print(f'ERROR {e}')
+    finally:
+        cv2.destroyAllWindows()
+
 def get_transforms(H, W):
     tfms = transforms.Compose([
         transforms.Resize((H, W)), # h,w
@@ -18,11 +30,8 @@ def get_transforms(H, W):
         ])
     return tfms
 
-def show_tensor(tensor):
-    np_img = tensor.cpu().numpy().transpose(1, 2, 0)
-    cv2.imshow('result', np_img[...,::-1])
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+def normalize(x, mean, std):
+    return (x - mean).div(std)
 
 def get_gaussian_mask(H, W):
 	#128 is image size
@@ -55,4 +64,3 @@ def get_mean_std(loader, H, W):
     var /= nb_samples
     std = torch.sqrt(var)
     return mean, std
-

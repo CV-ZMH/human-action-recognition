@@ -3,23 +3,26 @@ import time
 import random
 
 from PIL import Image
-from torchvision import transforms
 from torch.utils.data import DataLoader
 
 if __package__:
     from .basedataset import BaseDataset
-    from .utils import *
 else:
+    import sys
+    sys.path.insert(0, '..')
+    import torch
+    import torchvision
+    from torchvision import transforms
     from basedataset import BaseDataset
-    from utils import *
+    from utils import show_tensor
 
 
 class SiameseTriplet(BaseDataset):
     def __getitem__(self, index):
-        img0_fs, img0_lbl = self.dataset.imgs[index]
+        img0_fs, img0_lbl = self.data.imgs[index]
         while True:
             # get negative sample
-            img1_fs, img1_lbl = random.choice(self.dataset.imgs)
+            img1_fs, img1_lbl = random.choice(self.data.imgs)
             if img1_lbl != img0_lbl:
                 break
 
@@ -43,7 +46,7 @@ class SiameseTriplet(BaseDataset):
         if self.tfms:
             anchor, positive, negative = map(self.tfms, [anchor, positive, negative])
 
-        return anchor, positive, negative
+        return (anchor, positive, negative), []
 
 if __name__ == '__main__':
     root = '/home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501'
@@ -56,6 +59,12 @@ if __name__ == '__main__':
     tic = time.time()
     # we use DatasetFolder class which is used to calculate mean and std
     train_dataset = SiameseTriplet(root, mode='train', tfms=tfms)
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=False, num_workers=1)
+    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=1)
+    imgs, lbls = next(iter(train_loader))
+    if isinstance(imgs, (tuple, list)):
+        imgs = torch.cat([imgs[0], imgs[1], imgs[2]], dim=-1)
+
+    grid = torchvision.utils.make_grid(imgs, nrow=imgs.shape[0]//6)
+    show_tensor(grid)
     end = time.time() - tic
     print(f'\nLoading Time : {end:.4f}s')

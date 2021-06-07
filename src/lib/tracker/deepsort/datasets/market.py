@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from PIL import Image
 from torch.utils.data import DataLoader
-from torchvision.utils import make_grid
 
 if __package__:
-    from .utils import get_transforms
     from .basedataset import BaseDataset
-    from .utils import show_tensor
+    from ..utils import show_tensor
 else:
-    from utils import get_transforms
+    import sys
+    sys.path.insert(0, '..')
+    import torch
+    import torchvision
+    from torchvision import transforms
     from basedataset import BaseDataset
     from utils import show_tensor
 
@@ -24,9 +26,14 @@ class Market1501(BaseDataset):
 if __name__ == '__main__':
     root = '/home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501'
     H, W = 256, 128
-    tfms = get_transforms(H, W)
+    tfms = transforms.Compose([
+        transforms.Resize((H, W)), # h,w
+        transforms.ToTensor()
+        ])
     train_dataset = Market1501(root, mode='train', tfms=tfms)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=0)
-    img, lbl = next(iter(train_loader))
-    grid = make_grid(img, nrow=8)
+    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=0)
+    imgs, lbls = next(iter(train_loader))
+    if isinstance(imgs, (tuple, list)):
+        imgs = torch.cat([imgs[0], imgs[1], imgs[2]], dim=-1)
+    grid = torchvision.utils.make_grid(imgs, nrow=imgs.shape[0]//6)
     show_tensor(grid)
