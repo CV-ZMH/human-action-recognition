@@ -11,7 +11,7 @@ __all__ = ['DeepSort']
 
 
 class DeepSort(object):
-    def __init__(self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True, **kwargs):
+    def __init__(self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, pair_iou_thresh=0.6, **kwargs):
         self.extractor = Extractor(**kwargs)
 
         metric = NearestNeighborDistanceMetric(
@@ -19,7 +19,7 @@ class DeepSort(object):
         self.tracker = Tracker(
             metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
-    def update(self, bbox_xywh, ori_img, pair_iou_thresh=0.6):
+    def update(self, bbox_xywh, ori_img):
         """Update tracking analysis from keypoints' bbox and
         get the tracking id matching with keypoints'd bbox index
         """
@@ -54,7 +54,7 @@ class DeepSort(object):
                 track_id = track[-1].item()
                 for idx, detect_box in enumerate(detect_boxes):
                     iou = self.cal_IoU(track_box, detect_box)
-                    if iou > pair_iou_thresh:
+                    if iou > self.pair_iou_thresh:
                         outputs[track_id] = {}
                         outputs[track_id]['bbox'] = track_box.tolist()
                         outputs[track_id]['kp_index'] = idx

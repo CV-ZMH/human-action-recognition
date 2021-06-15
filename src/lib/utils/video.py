@@ -2,12 +2,7 @@ import os
 import time
 from typing import List, Optional, Union
 
-try:
-    import cv2
-except ImportError:
-    from .utils import DummyOpenCVImport
-
-    cv2 = DummyOpenCVImport()
+import cv2
 import numpy as np
 from rich import print
 from rich.progress import BarColumn, Progress, ProgressColumn, TimeRemainingColumn
@@ -105,7 +100,8 @@ class Video:
     def __iter__(self):
         with self.progress_bar as progress_bar:
             start = time.time()
-
+            cv2.namedWindow(self.task, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+            cv2.resizeWindow(self.task, 640, 480)
             # Iterate over video
             while True:
                 self.frame_counter += 1
@@ -161,7 +157,7 @@ class Video:
                     frame.shape[0] // downsample_ratio,
                 ),
             )
-        cv2.imshow("Output", frame)
+        cv2.imshow(self.task, frame)
         return cv2.waitKey(1)
 
     def get_output_file_path(self) -> str:
@@ -173,8 +169,7 @@ class Video:
         elif output_path_is_dir and self.camera is not None:
             file_name = f"camera_{self.camera}_out.mp4"
             return os.path.join(self.output_path, file_name)
-        else:
-            return self.output_path
+        return self.output_path
 
     def get_codec_fourcc(self, filename: str) -> Optional[str]:
         if self.codec_fourcc is not None:

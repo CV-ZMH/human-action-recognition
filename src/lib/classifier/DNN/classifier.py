@@ -29,7 +29,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 
-from .feature_procs import FeatureGenerator
+from feature_procs import FeatureGenerator
 
 
 # -- Settings

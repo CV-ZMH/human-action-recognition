@@ -57,8 +57,18 @@ def get_skeletons_bboxes(all_keypoints, image):
 
     return bboxes
 
-# files IO
+def get_terminal_size(default=(80, 24)):
+    columns, lines = default
+    for fd in range(0, 3):  # First in order 0=Std In, 1=Std Out, 2=Std Error
+        try:
+            columns, lines = os.get_terminal_size(fd)
+        except OSError:
+            continue
+        break
+    return columns, lines
 
+
+# files IO
 def listify(o):
     if o is None: return []
     if isinstance(o, list): return o

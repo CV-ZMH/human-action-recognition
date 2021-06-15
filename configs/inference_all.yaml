@@ -15,10 +15,10 @@ POSE:
 TRACKER:
     deepsort:
         # sort config
-        max_dist: 0.2
+        max_dist: 0.15
         max_iou_distance: 0.8 # 0.8
         max_age: 70 #70
-        n_init: 10
+        n_init: 6
         nn_budget: 100 #100
 
         # reid config
@@ -29,10 +29,8 @@ TRACKER:
         #     - tracker/deepsort
         #     - wideresnet/run-2/epoch_28-best_acc_50.466045272969374.pth
         # reid preprocess config
-        gaussian_mask: False
-        img_size:
-            - 256 # height
-            - 128 # width
+        gaussian_mask: False # use gaussian mask or not
+        img_size: [256, 128] # H, W
         mean: [0.1736, 0.1613, 0.1606]
         std: [0.1523, 0.1429, 0.1443]
         # original mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]

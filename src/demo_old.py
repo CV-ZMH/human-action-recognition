@@ -129,7 +129,7 @@ def main():
                         )
 
             # else:
-                # deepsort.increment_ages() # better tracking result without this function
+                # deepsort.increment_ages() # reduce False Positive tracking without this
             # print(f'frame cnt : {frame_cnt}')
             end_total = time.time() - start_pose
 
