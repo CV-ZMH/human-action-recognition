@@ -55,7 +55,8 @@ def main():
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
         # predict trtpose skeleton and save to file as openpose format
-        trtpose_keypoints = trtpose.predict(img_rgb)
+        counts, objects, peaks = trtpose.predict(img_rgb)
+        trtpose_keypoints = trtpose.get_keypoints(objects, counts, peaks)
         # remove bad skeletons
         trtpose_keypoints = trtpose.remove_persons_with_few_joints(trtpose_keypoints,
                                                                    min_total_joints=5,
@@ -95,10 +96,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-

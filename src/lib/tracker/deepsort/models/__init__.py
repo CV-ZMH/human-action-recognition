@@ -7,5 +7,5 @@ _reid_model = {
         'siamesenet' : SiameseNet,
         }
 
-def get_model(reid_net,  num_classes=None, reid=False):
+def get_model(reid_net,  num_classes=751, reid=False):
     return _reid_model[reid_net](num_classes=num_classes, reid=reid)

@@ -2,7 +2,7 @@ DATASET:
     name: market # market, mars
     data_path: &data_path /home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501
     workers: 1
-    batch_size: 32
+
     img_size:
         - 256 # height
         - 128 # width
@@ -27,3 +27,4 @@ TRAIN:
         lr: [0.01, 0.009]
         optim: [SGD, Adam]
         gaussian_mask: [True, False]
+        batch_size: 32

@@ -35,8 +35,7 @@ class Runner:
         self.run_start_time = None
         self.run_count = 0
 
-    @staticmethod
-    def create_save_root(path):
+    def create_save_root(self, path):
         root = os.path.join(*path) \
             if isinstance(path, (list, tuple)) else path
 
@@ -44,6 +43,7 @@ class Runner:
         run_id = int(get_last(root).split('-')[-1]) if os.path.isdir(root) else 0
         save_root = os.path.join(root, f'runs-{run_id+1}')
         os.makedirs(save_root)
+        if self.verbose: print(f'[INFO] Creating training checkpoints folder : {save_root}')
         return save_root
 
     def begin_run(self, run):
@@ -63,19 +63,19 @@ class Runner:
         self.total_loss = 0
         self.total_accuracy = 0
 
-    def end_dataiter(self, loader, model, prefix_tag):
+    def end_dataiter(self, loader, model, epoch, prefix_tag):
         self.total_accuracy /= len(loader.dataset)
         self.total_loss /= len(loader.dataset)
         imgs, lbls = next(iter(loader))
         if isinstance(imgs, (tuple, list)): # triplet dataloader
-            self.tb.add_graph(model, [imgs[0], imgs[1], imgs[2]])
+            self.tb.add_graph(model.cpu(), [imgs[0][0:1], imgs[1][0:1], imgs[2][0:1]]) #TODO cuda
             imgs = torch.cat([imgs[0], imgs[1], imgs[2]], dim=-1)
         else:
-            self.tb.add_graph(model, imgs)
+            self.tb.add_graph(model.cpu(), imgs[0:1])
         grid = torchvision.utils.make_grid(imgs, nrow=imgs.shape[0]//6)
-        self.tb.add_image('{prefix_tag} images', grid)             #
-        self.tb.add_scalar(f'{prefix_tag} loss', self.total_loss)
-        self.tb.add_scalar(f'{prefix_tag} Acc', self.total_accuracy)
+        self.tb.add_image(f'{prefix_tag} images', grid, epoch)             #
+        self.tb.add_scalar(f'{prefix_tag} loss', self.total_loss, epoch)
+        self.tb.add_scalar(f'{prefix_tag} Acc', self.total_accuracy, epoch)
         # reset tracked variables
         self.total_accuracy = 0
         self.total_loss = 0

@@ -7,8 +7,8 @@ import argparse
 import torch
 
 from utils import utils, vis, parser
-from pose_estimation import TrtPose
-from tracking import DeepSort
+from pose_estimation.trtpose import TrtPose
+from tracker.deepsort import DeepSort
 # from classifier import MultiPersonClassifier
 from utils.lib_classifier import MultiPersonClassifier
 
@@ -25,19 +25,19 @@ def get_args():
 
     # inference source
     ap.add_argument('--src', help='input file for pose estimation, video or webcam',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_2.mp4')
+                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4')
                     # default='../test_data/aung_la.mp4')
 
     # thresholds for better result of tracking and action recognition
     ap.add_argument('--pair_iou_thresh', type=float,
-                    help='IoU threshold to compare with tracking bbox and skeleton bbox IoU',
+                    help='IoU threshold to compare with estimated bbox and skeleton bbox IoU',
                     default=0.5)
     ap.add_argument('--min_joints', type=int,
                     help='minimun keypoint number threshold to use tracking and action recognition.',
                     default=8)
     ap.add_argument('--min_leg_joints', type=int,
                     help='minimun legs keypoint number threshold to use tracking and action recogniton.',
-                    default=4)
+                    default=3)
 
     # save path and visualization info
     ap.add_argument('--draw_kp_numbers', action='store_true',
@@ -74,7 +74,7 @@ def main():
 
         # Initiate trtpose, deepsort and action classifier
         trtpose = TrtPose(**cfg.TRTPOSE, **cfg.TRT_CFG)
-        deepsort = DeepSort(**cfg.DEEPSORT)
+        tracker = DeepSort(**cfg.TRACKER.deepsort)
         if args.mode == 'action':
             classifier = MultiPersonClassifier(**cfg.CLASSIFIER)
 
@@ -91,7 +91,8 @@ def main():
 
             # predict keypoints
             start_pose = time.time()
-            trtpose_keypoints = trtpose.predict(img_rgb)
+            counts, objects, peaks = trtpose.predict(img_rgb)
+            trtpose_keypoints = trtpose.get_keypoints(objects, counts, peaks)
             trtpose_keypoints = trtpose.remove_persons_with_few_joints(
                                                         trtpose_keypoints,
                                                         min_total_joints=args.min_joints,
@@ -102,13 +103,13 @@ def main():
             skeletons, _ = trtpose.keypoints_to_skeletons_list(openpose_keypoints)
 
             # get skeletons' bboxes
-            bboxes = utils.get_skeletons_bboxes(openpose_keypoints, img_bgr)
+            bboxes = utils.get_skeletons_bboxes(openpose_keypoints, img_rgb)
             end_pose = time.time() - start_pose
             if bboxes:
                 # pass skeleton bboxes to deepsort
                 start_track = time.time()
                 xywhs = torch.as_tensor(bboxes)
-                tracks = deepsort.update(xywhs, img_rgb, args.pair_iou_thresh)
+                tracks = tracker.update(xywhs, img_rgb, args.pair_iou_thresh)
                 end_track = time.time() - start_track
 
                 # classify tracked skeletons' actions
@@ -136,11 +137,11 @@ def main():
                 os.makedirs(args.save_folder, exist_ok=True)
                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 save_name = os.path.join(
-                                args.save_folder,
-                                '{}_trtpose_deepsort_{}_{}.avi'
-                                .format(os.path.basename(args.src[:-4]) \
-                                        if args.src else 'webcam',
-                                         args.mode, cfg.TRTPOSE.size))
+                                args.save_folder, '{}_trtpose_{}_{}_{}.avi'.format(
+                                    os.path.basename(args.src[:-4]) if args.src else 'webcam',
+                                    cfg.TRACKER.deepsort.reid_net,
+                                    args.mode, cfg.TRTPOSE.size
+                                ))
 
                 writer = cv2.VideoWriter(
                     save_name, fourcc, 20.0,
@@ -183,4 +184,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

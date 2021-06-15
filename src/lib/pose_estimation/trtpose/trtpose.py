@@ -89,6 +89,7 @@ class TrtPose:
         model.load_state_dict(torch.load(model_file))
         return model
 
+    @torch.no_grad()
     def predict(self, image: np.ndarray):
         """predict pose estimation on rgb image"""
 
@@ -99,9 +100,9 @@ class TrtPose:
         cmap, paf = self.model(tensor_img)
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
         counts, objects, peaks = self.parse_objects(cmap, paf) # cmap threhold=0.15, link_threshold=0.15
-        all_keypoints = self.get_keypoints(objects, counts, peaks)
+        # all_keypoints = self.get_keypoints(objects, counts, peaks)
         # print('[INFO] Numbers of person detected : {} '.format(counts.shape[0]))
-        return all_keypoints
+        return counts, objects, peaks
 
     def preprocess(self, image):
         """Resize image and transform to tensor image"""
@@ -182,4 +183,4 @@ if __name__ == '__main__':
     pose_estimator = TrtPose(size=size, weight=weight)
     x = np.ones((size, size, 3), dtype=np.uint8)
     y = pose_estimator.predict(x)
-    print(y.shape)
+    # print(y.shape)

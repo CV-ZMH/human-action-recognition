@@ -1,19 +1,30 @@
-Tracker:
-DEEPSORT:
-  reid_net: wideresnet # [wideresnet, siamese]
-  max_dist: 0.15
-  # nms_max_overlap: 0.5
-  max_iou_distance: 0.8 # 0.8
-  max_age: 70 #70
-  n_init: 3
-  nn_budget: 100 #100
+TRACKER:
+    deepsort:
+        # sort config
+        max_dist: 0.2
+        max_iou_distance: 0.8 # 0.8
+        max_age: 70 #70
+        n_init: 10
+        nn_budget: 100 #100
+
+        # reid config
+        reid_net: siamesenet # [wideresnet, siamesenet]
+        model_path: /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/tracker/deepsort/siamese/run-2/epoch_141-loss_0.12379710667936526.pth
+        gaussian_mask: False
+        img_size:
+            - 256 # height
+            - 128 # width
+        mean: [0.1736, 0.1613, 0.1606]
+        std: [0.1523, 0.1429, 0.1443]
+        # original mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
 CLASSIFIER:
-  # model_path: ../weights/classifier/action_classifier.pkl
-  # classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
-  # window_size: 5
+    ## model
+    # model_path: ../weights/classifier/action_classifier.pkl
+    # classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+    # window_size: 5
 
-  # ko zeyan model
-  model_path: ../weights/classifier/trained_classifier_GWpose_DNN.pickle
-  classes: ['sit', 'stand', 'walk', 'falling']
-  window_size: 8
+    # custom model
+    model_path: ../weights/classifier/trained_classifier_GWpose_DNN.pickle
+    classes: ['sit', 'stand', 'walk', 'falling']
+    window_size: 8

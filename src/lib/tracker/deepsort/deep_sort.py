@@ -11,11 +11,8 @@ __all__ = ['DeepSort']
 
 
 class DeepSort(object):
-    def __init__(self, reid_net, max_dist=0.2, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
-        # self.min_confidence = min_confidence
-        self.nms_max_overlap = nms_max_overlap
-
-        self.extractor = Extractor(reid_net, use_cuda=use_cuda)
+    def __init__(self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True, **kwargs):
+        self.extractor = Extractor(**kwargs)
 
         metric = NearestNeighborDistanceMetric(
             "cosine", max_dist, nn_budget)
@@ -128,6 +125,8 @@ class DeepSort(object):
             im_crops.append(im)
         if im_crops:
             features = self.extractor(im_crops)
+            if len(features.shape)==1:
+                features = np.expand_dims(features,0)
         else:
             features = np.array([])
         return features

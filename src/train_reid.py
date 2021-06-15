@@ -1,20 +1,23 @@
 import argparse
 
-# import _init_paths
+import _init_paths
 import torch
 from torch.utils.data import DataLoader
 
-from lib.utils.parser import YamlParser
-from lib.tracker.deepsort import Trainer, Runner, RunBuilder
-from lib.tracker.deepsort.datasets import Market1501, SiameseTriplet
-from lib.tracker.deepsort.models import get_model
-from lib.tracker.deepsort.loss import TripletLoss
-from lib.tracker.deepsort.utils import get_transforms
+from utils.parser import YamlParser
+from tracker.deepsort import Trainer, Runner, RunBuilder
+from tracker.deepsort.datasets import Market1501, SiameseTriplet
+from tracker.deepsort.models import get_model
+from tracker.deepsort.loss import TripletLoss
+from tracker.deepsort.utils import get_transforms
 
 def parser():
     ap = argparse.ArgumentParser()
     ap.add_argument('--config_file', type=str, help='train config file path',
                     default='../configs/training_reid.yaml')
+    ap.add_argument('--gpu', type=int, help='gpu device id, -1 is cpu, (default=0)',
+                    default='0')
+
     return ap.parse_args()
 
 def get_dataloaders(reid_net, data_path, img_size, batch_size, workers, **kwargs):
@@ -25,7 +28,7 @@ def get_dataloaders(reid_net, data_path, img_size, batch_size, workers, **kwargs
         val_dataset = Market1501(data_path, mode='val', tfms=tfms)
     elif reid_net == 'siamesenet':
         train_dataset = SiameseTriplet(data_path, mode='train', tfms=tfms)
-        val_dataset = Market1501(data_path, mode='val', tfms=tfms)
+        val_dataset = SiameseTriplet(data_path, mode='val', tfms=tfms)
 
     train_loader = DataLoader(
         train_dataset, shuffle=True,
@@ -45,18 +48,17 @@ def main():
     cfg = YamlParser(args.config_file)
     train_meta = cfg.TRAIN.fixed_params
     data_meta = cfg.DATASET
-
-    # load datasets
-    train_loader, val_loader, num_classes = get_dataloaders(
-        reid_net=train_meta.reid_net, **data_meta
-        )
-
     runs = RunBuilder.get_runs(cfg.TRAIN.tune_params)
     runner = Runner(train_meta=train_meta, data_meta=data_meta)
     for run in runs:
         print(f'\n[INFO] {run}\n')
         runner.begin_run(run)
-
+         # load datasets
+        train_loader, val_loader, num_classes = get_dataloaders(
+            reid_net=train_meta.reid_net,
+            batch_size=run.batch_size,
+            **data_meta
+        )
         # build model
         model = get_model(train_meta.reid_net, num_classes, reid=False)
 
@@ -82,7 +84,7 @@ def main():
         # trainer
         trainer = Trainer(
             runner, train_loader, val_loader, model,
-            optimizer, loss_fn, gpu=train_meta.gpu, verbose=True
+            optimizer, loss_fn, gpu=args.gpu, verbose=True
             )
 
         # training epoch

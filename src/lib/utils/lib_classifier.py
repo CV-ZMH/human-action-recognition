@@ -16,14 +16,9 @@ import numpy as np
 import sys
 import os
 import pickle
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 from collections import deque
 import cv2
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC

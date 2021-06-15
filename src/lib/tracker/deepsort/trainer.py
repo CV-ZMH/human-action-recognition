@@ -16,12 +16,13 @@ class Trainer:
         self.optimizer = optimizer
         self.verbose = verbose
 
+        # setup device
+        self.device = self.setup_device(gpu)
+
         # for data preprocessing
         self.norm = transforms.Normalize(runner.data_meta.mean, runner.data_meta.std)
         self.mask = get_gaussian_mask(*runner.data_meta.img_size) \
             if runner.run_params.gaussian_mask else None #TODO run params
-        # setup device
-        self.device = self.setup_device(gpu)
 
         # setup training variables
         self.start_epoch = 0
@@ -41,13 +42,14 @@ class Trainer:
 
     def save_checkpoint(self, filename, epoch, accuracy):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
+        if self.verbose: print(f'\n[INFO] Saving checkpoint : {os.path.basename(filename)}')
         checkpoints = {
             'net_dict': self.model.state_dict(),
             'lr' : self.optimizer.param_groups[0]['lr'],
+            'optim_dict': self.optimizer.state_dict(),
             'epoch' : epoch,
             'acc' : accuracy,
             }
-        if self.verbose: print(f'\n[INFO] Saving checkpoint : {filename}')
         torch.save(checkpoints, filename)
 
     def load_checkpoint(self, pretrained):
@@ -57,36 +59,48 @@ class Trainer:
         self.start_epoch = checkpoint['epoch']
         self.best_score = checkpoint['acc']
 
-    # def update_optimizer_lr(self, lr): #TODO
-    #     self.optimizer =
+        self.optimizer.load_state_dict(checkpoint['optim_dict'])
+        for state in self.optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(self.device)
+
+    def update_optimizer_lr(self): #TODO
+        for param in self.optimizer.param_groups:
+            param['lr'] = self.start_lr
 
     def preprocess(self, images, labels):
         labels = labels.to(self.device) if len(labels) > 0 else None
         if not isinstance(images, (tuple, list)):
             images = (images,)
         images = tuple(img.to(self.device) for img in images)
+        # print('mask device', self.mask.is_cuda)
+        # print('img0 device', images[0].is_cuda)
         if self.mask is not None:
+            self.mask = self.mask.to(self.device)
             images = tuple(img * self.mask for img in images)
         images = tuple(self.norm(img) for img in images)
         return images, labels
 
     def fit(self, total_epoch, pretrained):
         # prepare model for training
-        self.model.to(self.device)
+        # self.model.to(self.device)
         if os.path.isfile(pretrained):
             self.load_checkpoint(pretrained)
-
+            self.update_optimizer_lr()
         # start training
-        desc_template = "Epoch: [{}/total_epoch] Iter: [{}/{}] LR: {} Loss: {:.4f}"
+        desc_template = "Epoch: [{}/{}] Iter: [{}/{}] LR: {} Loss: {:.4f}"
         for epoch in range(self.start_epoch, total_epoch):
-            self.model.train()
+            self.start_lr = self.optimizer.param_groups[0]['lr']
+            self.model.train().to(self.device)
             self.runner.begin_dataiter() #
             tq = tqdm(enumerate(self.train_loader))
-            for i_iter, (images, labels) in tq:
-                images, labels = self.preprocess(images, labels)
+            for i_iter, (imgs, lbls) in tq:
+                images, labels = self.preprocess(imgs, lbls)
+                # try:
                 outputs = self.model(*images)
                 #calculate loss
-                if labels: # normal classifier
+                if labels is not None: # normal classifier
                     loss = self.loss_fn(outputs, labels)
                     self.runner.track_metric(outputs, labels)
                     self.runner.track_loss(loss, labels)
@@ -97,29 +111,38 @@ class Trainer:
                 self.optimizer.zero_grad() # clean gradient
                 loss.backward() # calculate gradient
                 self.optimizer.step() # update weights
-                desc_template.format(epoch, i_iter, len(self.train_loader),
-                                     self.start_lr, loss.item())
-            self.runner.end_dataiter(self.train_loader, self.model, prefix_tag='train')
-
+                tq.set_description(desc=desc_template.format(
+                    epoch+1, total_epoch,
+                    i_iter+1, len(self.train_loader),
+                    self.start_lr, loss.item()
+                    ))
+                del outputs, images
+                torch.cuda.empty_cache()
+            self.runner.end_dataiter(self.train_loader, self.model, epoch+1, prefix_tag='train')
             # start validation
-            self.test(self.val_loader, self.model)
-            if self.val_acc > self.best_score:
-                self.best_score = self.val_acc
+            self.test(self.val_loader)
+            self.runner.end_dataiter(self.val_loader, self.model, epoch+1, prefix_tag='val')
+            if labels is not None:
+                if self.val_acc > self.best_score:
+                    self.best_score = self.val_acc
+                    checkpoint_file = os.path.join(
+                        self.runner.save_root, 'checkpoints', f'{self.runner.run_params}',
+                        f'epoch_{epoch+1}-best_acc_{100*self.best_score}.pth')
+                    self.save_checkpoint(checkpoint_file, epoch, self.best_score) #
+            elif epoch % 10 == 0:
                 checkpoint_file = os.path.join(
                     self.runner.save_root, 'checkpoints', f'{self.runner.run_params}',
-                    f'epoch_{epoch+1}-best_acc_{100*self.best_score}.pth')
+                    f'epoch_{epoch+1}-loss_{self.val_loss}.pth')
                 self.save_checkpoint(checkpoint_file, epoch, self.best_score) #
 
-
     @torch.no_grad()
-    def test(self, loader, model):
-        model.eval()
+    def test(self, loader):
+        self.model.eval().to(self.device)
         print('Validation...')
         for images, labels in tqdm(loader):
             images, labels = self.preprocess(images, labels)
-            outputs = model(*images)
-            loss = self.runner.calculate_loss(outputs, labels)
-            if labels: # normal classifier
+            outputs = self.model(*images)
+            if labels is not None: # normal classifier
                 loss = self.loss_fn(outputs, labels)
                 self.runner.track_metric(outputs, labels)
                 self.runner.track_loss(loss, labels)
@@ -130,4 +153,3 @@ class Trainer:
         self.val_loss = self.runner.total_loss / len(loader.dataset) #
         self.val_acc = self.runner.total_accuracy / len(loader.dataset)  #
         print(desc.format(self.val_loss, self.val_acc)) #
-        self.runner.end_dataiter(loader, self.model, prefix_tag='val')

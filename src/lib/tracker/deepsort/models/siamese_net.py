@@ -3,7 +3,7 @@ from torch import nn
 
 
 class SiameseNet(nn.Module):
-    def __init__(self, reid=False, num_classes=None):
+    def __init__(self, **kwargs):
         super(SiameseNet, self).__init__()
         self.net = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, stride=2),
@@ -33,10 +33,12 @@ class SiameseNet(nn.Module):
             nn.Conv2d(512, 1024, kernel_size=1, stride=1),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(1024),
+            nn.AvgPool2d((3, 1), 1)
             )
 
     def forward_once(self, x):
         output = self.net(x)
+        output = torch.squeeze(output)
         return output
 
     def forward(self, input1, input2, input3=None):
