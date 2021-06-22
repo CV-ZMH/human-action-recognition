@@ -57,7 +57,7 @@ def min_cost_matching(
         tracks, detections, track_indices, detection_indices)
     cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5
 
-    row_indices, col_indices = linear_assignment(cost_matrix)
+    row_indices, col_indices = linear_assignment(cost_matrix) # hungarian assigment on cost matrix
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):
@@ -114,7 +114,6 @@ def matching_cascade(
         * A list of matched track and detection indices.
         * A list of unmatched track indices.
         * A list of unmatched detection indices.
-
     """
     if track_indices is None:
         track_indices = list(range(len(tracks)))
@@ -123,6 +122,7 @@ def matching_cascade(
 
     unmatched_detections = detection_indices
     matches = []
+
     for level in range(cascade_depth):
         if len(unmatched_detections) == 0:  # No detections left
             break
@@ -139,6 +139,7 @@ def matching_cascade(
                 distance_metric, max_distance, tracks, detections,
                 track_indices_l, unmatched_detections)
         matches += matches_l
+
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
     return matches, unmatched_tracks, unmatched_detections
 

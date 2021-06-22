@@ -30,13 +30,13 @@ def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
     new_ymax = np.clip(ymax + ratio * height, 0, img_height)
     new_width = new_xmax - new_xmin
     new_height = new_ymax - new_ymin
-    x_center = new_xmin + (new_width/2)
-    y_center = new_ymin + (new_height/2)
+    # x_center = new_xmin + (new_width/2)
+    # y_center = new_ymin + (new_height/2)
 
-    return [int(x_center), int(y_center), int(new_width), int(new_height)]
+    return [new_xmin, new_ymin, new_width, new_height]
 
 def get_skeletons_bboxes(all_keypoints, image):
-    """Get list of (xcenter, ycenter, width, height) bboxes from all persons keypoints"""
+    """Get list of bboxes (xmin, ymin, width, height) from persons' keypoints"""
 
     bboxes = []
     img_h, img_w =  image.shape[:2]
@@ -55,7 +55,7 @@ def get_skeletons_bboxes(all_keypoints, image):
             continue
         bboxes.append(bbox)
 
-    return bboxes
+    return np.asarray(bboxes)
 
 # files IO
 

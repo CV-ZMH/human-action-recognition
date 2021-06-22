@@ -96,7 +96,7 @@ class WideResnet(nn.Module):
         x = x.view(x.size(0), -1)
         # B x 128
         if self.reid:
-            x = x.div(x.norm(p=2, dim=1, keepdim=True)) # p=2, same like frobinius norm
+            x = x.div(x.norm(p=2, dim=1, keepdim=True)) # p=2, inf norm
             return x
         # classifier
         x = self.classifier(x)
@@ -115,6 +115,6 @@ class WideResnet(nn.Module):
 
 
 if __name__ == '__main__':
-    net = WideResnet()
-    x = torch.randn(4, 3, 128, 64)
+    net = WideResnet(reid=False)
+    x = torch.ones(4, 3, 256, 128)
     y = net(x)

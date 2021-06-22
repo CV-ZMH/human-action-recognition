@@ -1,6 +1,9 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
 
+def l1_norm(v):
+    norm = np.sum(v)
+    return v / norm
 
 def _pdist(a, b):
     """Compute pair-wise squared distance between points in `a` and `b`.
@@ -22,6 +25,7 @@ def _pdist(a, b):
     a, b = np.asarray(a), np.asarray(b)
     if len(a) == 0 or len(b) == 0:
         return np.zeros((len(a), len(b)))
+
     a2, b2 = np.square(a).sum(axis=1), np.square(b).sum(axis=1)
     r2 = -2. * np.dot(a, b.T) + a2[:, None] + b2[None, :]
     r2 = np.clip(r2, 0., float(np.inf))
@@ -151,6 +155,8 @@ class NearestNeighborDistanceMetric(object):
             if self.budget is not None:
                 self.samples[target] = self.samples[target][-self.budget:]
         self.samples = {k: self.samples[k] for k in active_targets}
+        # for i in self.samples:
+        #     print(f'{i} samples : {self.samples[i].__len__()}')
 
     def distance(self, features, targets):
         """Compute distance between features and targets.

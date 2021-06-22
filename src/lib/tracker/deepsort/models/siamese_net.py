@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+from torch.nn import functional as F
 
 class SiameseNet(nn.Module):
     def __init__(self, **kwargs):
@@ -33,12 +33,14 @@ class SiameseNet(nn.Module):
             nn.Conv2d(512, 1024, kernel_size=1, stride=1),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(1024),
-            nn.AvgPool2d((3, 1), 1)
+
+            # nn.AvgPool2d((3, 1), 1)
             )
 
     def forward_once(self, x):
-        output = self.net(x)
-        output = torch.squeeze(output)
+        feat = self.net(x)
+        output = F.avg_pool2d(feat, feat.shape[2:])
+        # output = torch.squeeze(output)
         return output
 
     def forward(self, input1, input2, input3=None):
@@ -61,5 +63,9 @@ def test():
     out1, out2, out3 = net(inp1, inp2, inp3)
 
 if __name__ == '__main__':
-    # net = SiameseNet()
-    test()
+    inp1 = torch.ones(1, 3, 256, 128).cuda()
+    net = SiameseNet().cuda()
+    out = net.forward_once(inp1)
+    out = out.div(out.norm(p='fro', dim=1, keepdim=True))
+    out.shape, out.min(), out.max()
+    # test()

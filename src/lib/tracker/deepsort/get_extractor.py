@@ -26,8 +26,8 @@ class Extractor(object):
         self.norm = transforms.Normalize(mean, std)
 
     def load_model(self, model_path):
-        if not os.path.isfile(model_path):
-            model_path = os.path.join(model_root, f'{self.reid_net}_reid.pth')
+        assert os.path.isfile(model_path), f"reid model don't exit : {model_path}"
+
         print(f'[INFO] Loading deepsort reid model : {model_path}')
         model = get_model(self.reid_net, num_classes=751, reid=True)
         state_dict = torch.load(model_path, map_location='cpu')
@@ -51,8 +51,15 @@ class Extractor(object):
         img_batch = self._preprocess(img_crops)
         if self.reid_net == 'siamesenet':
             features = self.model.forward_once(img_batch)
+            features.squeeze_(-1).squeeze_(-1)
+            features.div_(features.norm(p=2, dim=1, keepdim=True))
         elif self.reid_net == 'wideresnet':
             features = self.model(img_batch)
+
+        elif self.reid_net == 'align_reid':
+            features, _ = self.model(img_batch)
+            features.div_(features.norm(p=2, dim=1, keepdim=True))
+
         return features.cpu().numpy()
 
 

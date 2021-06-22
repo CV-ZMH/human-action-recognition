@@ -1,3 +1,4 @@
+import os
 import json
 from PIL import Image
 from collections import OrderedDict
@@ -21,18 +22,14 @@ class TrtPose:
             link_threshold=0.1
             )
 
-    @classmethod
-    def _check_kwargs(cls, kwargs):
-        for n in kwargs:
-            assert n in cls._params.keys(), f'Unrecognized attribute name : "{n}"'
-
     def __init__(self, size, **kwargs):
-        self._check_kwargs(kwargs)
         self.__dict__.update(self._params)
         self.__dict__.update(kwargs)
 
         if not isinstance(size, (tuple, list)):
             size = (size, size)
+        if isinstance(self.weight, (tuple, list)):
+            self.weight = os.path.join(*self.weight)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.width, self.height = size
 
@@ -85,9 +82,8 @@ class TrtPose:
             print('not supported model type "{}"'.format(backbone))
             return -1
 
-        model.to(self.device).eval()
-        model.load_state_dict(torch.load(model_file))
-        return model
+        model.load_state_dict(torch.load(model_file, map_location='cpu'))
+        return model.to(self.device).eval()
 
     @torch.no_grad()
     def predict(self, image: np.ndarray):

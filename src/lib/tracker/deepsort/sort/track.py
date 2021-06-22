@@ -63,7 +63,7 @@ class Track:
 
     """
 
-    def __init__(self, mean, covariance, track_id, n_init, max_age,
+    def __init__(self, mean, covariance, track_id, n_init, max_age, #todo: add detect id
                  feature=None):
         self.mean = mean
         self.covariance = covariance
@@ -144,7 +144,7 @@ class Track:
 
         self.hits += 1
         self.time_since_update = 0
-        if self.state == TrackState.Tentative and self.hits >= self._n_init:
+        if self.is_tentative() and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
     def mark_missed(self):

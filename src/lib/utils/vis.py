@@ -9,12 +9,19 @@ from .commons import *
 def draw_frame_info(img, color='red', **kwargs):
     """Draw texts as provided kwargs in the left corner of the frame"""
 
-    y0, dy = 20, 24
+    # add blank area in left side to display the texts
+    h, w, d = img.shape
+    blank = np.zeros((h, 200, d), dtype=np.uint8)
+    img_disp = np.hstack((blank, img))
+    # draw texts
     color = colors[color.lower()]
-    texts = [f'{k} : {v}' for k,v in kwargs.items()]
+    texts = [f'{k}: {v}' for k,v in kwargs.items()]
+    y0, dy = 25, 50
     for i, line in enumerate(texts):
         y = y0 + i*dy
-        cv2.putText(img, line, (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        cv2.putText(img_disp, line, (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+    return img_disp
 
 def get_color_fast(idx):
     color_pool = list(colors.values())[:-1] # no use black color for tracking bbox
@@ -30,11 +37,12 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
     thickness = 2 if height*width > (720*960) else 1
 
     # Draw each of the tracked skeletons and actions text
-    for track_id, track in tracks.items():
+    for track in tracks:
+        track_id = track['track_id']
         color = get_color_fast(track_id)
 
         # draw keypoints
-        keypoints = all_keypoints[track['kp_index']]
+        keypoints = all_keypoints[track['detection_index']]
         draw_trtpose(image,
                      keypoints,
                      thickness=thickness,
@@ -42,7 +50,7 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
                      **kwargs)
 
         # draw track bbox
-        x1, y1, x2, y2 = map(int, track['bbox'])
+        x1, y1, x2, y2 = map(int, track['track_bbox'])
         cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
 
         # draw text over rectangle background

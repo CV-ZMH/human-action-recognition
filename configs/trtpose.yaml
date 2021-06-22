@@ -1,18 +1,18 @@
-weight_folder: /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/pose_estimation/trtpose/
+weight_folder: &weight_folder /home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/pose_estimation/trtpose
 
 TRTPOSE:
-    size: &size 256
-    backbone: &backbone densenet121
+    size: 256
+    backbone: densenet121
     json: lib/pose_estimation/trtpose/human_pose.json
 
-TRT_CFG:
-    is_trt: true
-    weight:
-      - *backbone
-      - *size
-      - trt.pth
+    torch_model:
+        is_trt: false
+        weight:
+          - *weight_folder
+          - densenet121_baseline_att_256x256_B_epoch_160.pth
 
-TORCH_CFG:
-    is_trt: false
-    weight:  densenet121_baseline_att_256x256_B_epoch_160.pth
-
+    trt_model:
+        is_trt: true
+        weight:
+          - *weight_folder
+          - densenet121_baseline_att_256x256_B_epoch_160_256x256.trt
