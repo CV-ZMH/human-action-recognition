@@ -7,5 +7,5 @@ trackers = {
     'norfair' : NorFair #TODO add implementation on master branch
 }
 
-def get_tracker(tracker_name, **kwargs):
-    return trackers[tracker_name](**kwargs)
+def get_tracker(name, **kwargs):
+    return trackers[name](**kwargs)

@@ -4,5 +4,5 @@ estimators = {
     'trtpose' : TrtPose
     }
 
-def get_pose_estimator(estimator_name, **kwargs):
-    return estimators[estimator_name](**kwargs)
+def get_pose_estimator(name, **kwargs):
+    return estimators[name](**kwargs)

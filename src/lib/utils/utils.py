@@ -1,22 +1,52 @@
 # -*- coding: utf-8 -*-
-
 import os
 import mimetypes
-import numpy as np
-
 from pathlib import Path
 from typing import Iterable
+import numpy as np
 from .commons import *
 
-def trtpose_to_openpose(trtpose_keypoints):
+def keypoints_to_skeletons_list(all_keypoints):
+    """Get skeleton data of (x, y) from humans."""
+
+    # if scale_h is None:
+    #     scale_h = self._scale_h
+    skeletons_list = []
+    NaN = 0
+    for keypoints in all_keypoints:
+        skeleton = [NaN]*(18*2)
+        for idx, kp in enumerate(keypoints):
+            skeleton[2*idx] = kp[1]
+            skeleton[2*idx+1] = kp[2]
+        skeletons_list.append(skeleton)
+    return skeletons_list
+
+def trtpose_to_openpose(keypoints_list):
     """Change trtpose skeleton to openpose format"""
 
-    new_keypoints = trtpose_keypoints.copy()
-
+    new_keypoints = keypoints_list.copy()
     if new_keypoints.tolist():
         for idx1, idx2 in openpose_trtpose_match_idx:
-            new_keypoints[:, idx1, 1:] = trtpose_keypoints[:, idx2, 1:] # neck
+            new_keypoints[:, idx1, 1:] = keypoints_list[:, idx2, 1:] # neck
     return new_keypoints
+
+def convert_to_skeletons(keypoints_list):
+    """Prepare trtpose keypoints for action recognition.
+    First, convert openpose keypoints format from trtpose keypoints for
+    action recognition as it's features extraction step is based on
+    openpose keypoint format.
+    Then, changed to skeletons list.
+    """
+    openpose_keypoints = trtpose_to_openpose(keypoints_list)
+    skeletons_list = []
+    NaN = 0
+    for keypoints in openpose_keypoints:
+        skeleton = [NaN]*(18*2)
+        for idx, kp in enumerate(keypoints):
+            skeleton[2*idx] = kp[1]
+            skeleton[2*idx+1] = kp[2]
+        skeletons_list.append(skeleton)
+    return skeletons_list
 
 def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
     """expand bbox for containing more background"""
@@ -32,15 +62,19 @@ def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
     new_height = new_ymax - new_ymin
     # x_center = new_xmin + (new_width/2)
     # y_center = new_ymin + (new_height/2)
-
     return [new_xmin, new_ymin, new_width, new_height]
 
-def get_skeletons_bboxes(all_keypoints, image):
-    """Get list of bboxes (xmin, ymin, width, height) from persons' keypoints"""
+def keypoints_to_bbox(keypoints_list, image):
+    """Prepare bboxes from keypoints for object tracking.
+    args:
+        keypoints_list (np.ndarray): trtpose keypoints list
+    return:
+        bboxes (np.ndarray): bbox of (xmin, ymin, width, height)
+    """
 
     bboxes = []
     img_h, img_w =  image.shape[:2]
-    for idx, keypoints in enumerate(all_keypoints):
+    for idx, keypoints in enumerate(keypoints_list):
         keypoints = np.where(keypoints[:, 1:] !=0, keypoints[:, 1:], np.nan)
         keypoints[:, 0] *= img_w
         keypoints[:, 1] *= img_h
@@ -49,16 +83,13 @@ def get_skeletons_bboxes(all_keypoints, image):
         xmax = np.nanmax(keypoints[:,0])
         ymax = np.nanmax(keypoints[:,1])
         bbox = expand_bbox(xmin, xmax, ymin, ymax, img_w, img_h)
-
         # discard bbox with width and height == 0
         if bbox[2] == 0 or bbox[3] == 0:
             continue
         bboxes.append(bbox)
-
     return np.asarray(bboxes)
 
 # files IO
-
 def listify(o):
     if o is None: return []
     if isinstance(o, list): return o

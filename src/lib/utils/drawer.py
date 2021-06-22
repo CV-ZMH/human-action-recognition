@@ -16,7 +16,7 @@ def draw_frame_info(img, color='red', **kwargs):
     # draw texts
     color = colors[color.lower()]
     texts = [f'{k}: {v}' for k,v in kwargs.items()]
-    y0, dy = 25, 50
+    y0, dy = 25, 30
     for i, line in enumerate(texts):
         y = y0 + i*dy
         cv2.putText(img_disp, line, (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
@@ -28,7 +28,7 @@ def get_color_fast(idx):
     color = color_pool[idx % len(color_pool)]
     return color
 
-def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
+def draw_frame(image, tracks, keypoints_list, actions=None, **kwargs):
     """Draw skeleton pose, tracking id and action result on image.
     Check kwargs in func: `draw_trtpose`
     """
@@ -42,7 +42,7 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
         color = get_color_fast(track_id)
 
         # draw keypoints
-        keypoints = all_keypoints[track['detection_index']]
+        keypoints = keypoints_list[track['detection_index']]
         draw_trtpose(image,
                      keypoints,
                      thickness=thickness,
@@ -65,13 +65,13 @@ def draw_frame(image, tracks, all_keypoints, actions=None, **kwargs):
         cv2.putText(image, label, (x1, yy[1]),
                     cv2.FONT_HERSHEY_COMPLEX, 0.8, colors['black'], thickness)
 
-def draw_persons_keypoints(image, all_keypoints, **kwargs):
+def draw_persons_keypoints(image, keypoints_list, **kwargs):
     """Draw all persons' keypoints.
     Check kwargs in func: `draw_trtpose`
     """
     height, width = image.shape[:2]
     thickness = 2 if height*width > (720*960) else 1
-    for keypoints in all_keypoints:
+    for keypoints in keypoints_list:
         draw_trtpose(image, keypoints, thickness=thickness, **kwargs)
 
 def draw_trtpose(image,
@@ -109,6 +109,7 @@ def draw_trtpose(image,
             cv2.line(image, centers[pair[0]], centers[pair[1]], \
                      colors['blue'] if LR[pair_idx] else colors['red'],
                      thickness)
+
 
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,

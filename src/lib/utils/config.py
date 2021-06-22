@@ -2,6 +2,7 @@
 import os
 import yaml
 
+BASE_KEY = '_BASE_'
 
 class Config(dict):
     """
@@ -33,16 +34,31 @@ class Config(dict):
         assert os.path.isfile(config_file), f'file not exist : "{config_file}"'
         with open(config_file, 'r') as fo:
             config_dict = yaml.safe_load(fo.read())
-            self.update(config_dict)
+            self._load_base(config_file, config_dict)
+
+    def _load_base(self, config_file, config_dict):
+        if BASE_KEY in config_dict:
+            base_cfg_file = config_dict[BASE_KEY]
+            if base_cfg_file.startswith("~"):
+                base_cfg_file = os.path.expanduser(base_cfg_file)
+            if not any(map(base_cfg_file.startswith, [".", "./", "/", "https://", "http://"])):
+                # the path to base cfg is relative to the config file itself.
+                base_cfg_file = os.path.join(os.path.dirname(config_file), base_cfg_file)
+            self.load_yaml(base_cfg_file)
+            del config_dict[BASE_KEY]
+        self.update(config_dict)
 
     def merge_from_file(self, config_file):
         self.load_yaml(config_file)
 
+    def merge_from_dict(self, data):
+        self.update(data)
+
 if __name__ == '__main__':
-    cfg = Config(config_file='../configs/trtpose.yaml')
-    cfg.merge_from_file('../configs/deepsort.yaml')
+    cfgs = Config()
+    # cfgs.merge_from_file('../../../configs/trtpose.yaml')
     data = {
-        "a": "aval",
+        "weight_folder": "test.file",
         "b": {
             "b1": {
                 "b1a": "b1aval",
@@ -50,6 +66,7 @@ if __name__ == '__main__':
                 }
             }
         }
-    data1 = Config(data)
-    print(cfg)
-    print(data1)
+    cfgs.merge_from_file(config_file='../../../configs/Base_Config.yaml')
+    cfgs.merge_from_dict(data)
+    print(cfgs)
+    # print(data1)

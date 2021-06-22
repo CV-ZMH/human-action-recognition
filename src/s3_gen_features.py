@@ -10,7 +10,7 @@ import numpy as np
 
 from utils.config import Config
 from utils.skeletons_io import load_skeleton_data
-from classifier.feature_procs import extract_multi_frame_features
+from classifier.dnn.feature_procs import extract_multi_frame_features
 
 def process_features(X0, Y0, video_indices, classes, window_size=5):
     ''' Process features '''
@@ -42,7 +42,7 @@ def main():
     and then save features and labels to .csv file.
     '''
     # Settings
-    cfg = Config(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_action_recogn_pipeline.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
     window_size = cfg.window_size

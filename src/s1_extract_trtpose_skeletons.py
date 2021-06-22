@@ -6,7 +6,7 @@ import cv2
 from tqdm import tqdm
 from tabulate import tabulate
 
-from utils import utils, vis
+from utils import utils, drawer
 from utils.config import Config
 from utils.skeletons_io import ReadValidImagesAndActionTypesByTxt
 from pose_estimation.trtpose.trtpose import TrtPose
@@ -16,13 +16,13 @@ from pose_estimation.trtpose.trtpose import TrtPose
 def main():
     t0 = time.time()
     # Settings
-    cfg = Config(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_action_recogn_pipeline.yaml')
     cfg.merge_from_file('../configs/trtpose.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
 
     img_format = cfg.img_format
-    weight_name = '_'.join(map(str, cfg.TRT_CFG.weight))
-    cfg.TRT_CFG.weight = os.path.join(cfg.weight_folder, weight_name)
+    # weight_name = '_'.join(map(str, cfg.TRT_CFG.weight))
+    # cfg.TRT_CFG.weight = os.path.join(cfg.weight_folder, weight_name)
 
     ## IO folders
     src_imgs_folder = os.path.join(*cfg_stage.input.imgs_folder)
@@ -32,7 +32,7 @@ def main():
     dst_imgs_info_txt = os.path.join(*cfg_stage.output.imgs_info_txt)
 
     # initiate trtpose
-    trtpose = TrtPose(**cfg.TRTPOSE, **cfg.TRT_CFG)
+    trtpose = TrtPose(**cfg.TRTPOSE)
     # deepsort = DeepSort(**cfg.DEEPSORT)
 
      # Init output path
@@ -56,26 +56,22 @@ def main():
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
         # predict trtpose skeleton and save to file as openpose format
-        counts, objects, peaks = trtpose.predict(img_rgb)
-        trtpose_keypoints = trtpose.get_keypoints(objects, counts, peaks)
-        # remove bad skeletons
-        trtpose_keypoints = trtpose.remove_persons_with_few_joints(trtpose_keypoints,
-                                                                   min_total_joints=5,
-                                                                   min_leg_joints=0,
-                                                                   include_head=True)
-        if not trtpose_keypoints.tolist(): continue
-        openpose_keypoints = utils.trtpose_to_openpose(trtpose_keypoints)
-        skeletons, _ = trtpose.keypoints_to_skeletons_list(openpose_keypoints)
+        keypoints_list = trtpose.predict(img_rgb)
+
+        if len(keypoints_list) == 0: continue
+        skeletons= utils.convert_to_skeletons(keypoints_list)
 
         # save skeleton draw image
         save_name = img_format.format(i)
         img_name = os.path.join(dst_imgs_folder, save_name)
 
-        vis.draw_persons_keypoints(img_disp, trtpose_keypoints, draw_numbers=True)
+        drawer.draw_persons_keypoints(img_disp, keypoints_list, draw_numbers=True)
         cv2.imwrite(img_name, img_disp)
         cv2.imshow('result', img_disp)
-        cv2.waitKey(1)
-
+        key = cv2.waitKey(1)
+        if key==27 or key==ord('q'):
+            break
+        
         # save skeleton txt
         skeleton_txt = os.path.join(dst_skeletons_folder, save_name[:-4]+'.txt')
         save_data = [img_info + skeleton for skeleton in skeletons]
@@ -84,7 +80,7 @@ def main():
 
         # update progress bar descriptions
         tq.set_description(f'action -> {label}')
-        tq.set_postfix(num_of_person=len(trtpose_keypoints))
+        tq.set_postfix(num_of_person=len(keypoints_list))
 
     tq.close()
     cv2.destroyAllWindows()

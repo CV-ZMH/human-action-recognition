@@ -1,8 +1,8 @@
-from .dnn_classifier.classifier import MultiPersonClassifier
+from .dnn.classifier import MultiPersonClassifier
 
 classifiers = {
     'dnn' : MultiPersonClassifier
     }
 
-def get_classifier(classifier_name, **kwargs):
-    return classifiers[classifier_name](**kwargs)
+def get_classifier(name, **kwargs):
+    return classifiers[name](**kwargs)

@@ -12,7 +12,7 @@ This script includes:
 
 TODO: Add more comments to this function.
 '''
-
+import os
 import numpy as np
 import pickle
 from collections import deque
@@ -46,7 +46,8 @@ class MultiPersonClassifier(object):
     def __init__(self, model_path, classes, window_size=5):
 
         self.dict_id2clf = {}  # human id -> classifier of this person
-
+        if isinstance(model_path, (list, tuple)):
+            model_path = os.path.join(*model_path)
         # Define a function for creating classifier for new people.
         self._create_classifier = lambda human_id: ClassifierOnlineTest(
             model_path, classes, window_size, human_id)

@@ -12,6 +12,8 @@ class FeatureExtractor(object):
     def __init__(self, reid_net, model_path, img_size, mean, std, gaussian_mask=False, use_cuda=True, **kwargs): #TODO gaussian mask
         self.device = "cuda" if torch.cuda.is_available() and use_cuda else "cpu"
         self.reid_net = reid_net
+        if isinstance(model_path, (tuple, list)):
+            model_path = os.path.join(*model_path)
         self.model = self.load_model(model_path)
         self.mask = None
 
@@ -27,7 +29,7 @@ class FeatureExtractor(object):
         assert os.path.isfile(model_path), f"reid model don't exit : {model_path}"
 
         print(f'[INFO] Loading deepsort reid model : {model_path}')
-        model = get_model(self.reid_net, num_classes=751, reid=True)
+        model = get_reid_network(self.reid_net, num_classes=751, reid=True)
         state_dict = torch.load(model_path, map_location='cpu')
         model.load_state_dict(state_dict['net_dict'])
         model.to(self.device).eval() # add eval() for ineference mode
@@ -51,6 +53,7 @@ class FeatureExtractor(object):
             features = self.model.forward_once(img_batch)
             features.squeeze_(-1).squeeze_(-1)
             features.div_(features.norm(p=2, dim=1, keepdim=True))
+
         elif self.reid_net == 'wideresnet':
             features = self.model(img_batch)
 
@@ -59,10 +62,3 @@ class FeatureExtractor(object):
             features.div_(features.norm(p=2, dim=1, keepdim=True))
 
         return features.cpu().numpy()
-
-
-if __name__ == '__main__':
-    img = cv2.imread("demo.jpg")[:, :, (2, 1, 0)]
-    extr = Extractor("checkpoint/ckpt.t7")
-    feature = extr(img)
-    print(feature.shape)

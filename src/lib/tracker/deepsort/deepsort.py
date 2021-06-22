@@ -24,7 +24,7 @@ class DeepSort(object):
             n_init=n_init
         )
 
-    def update(self, bbox_tlwh, ori_img, debug=False):
+    def update(self, bbox_tlwh, rgb_img, debug=False):
         """Update tracker state via analyis of current keypoint's bboxes with previous tracked bbox.
         args:
             bbox_tlwh (list): list of keypoints bboxes, (xmin, ymin, w, h)
@@ -36,10 +36,9 @@ class DeepSort(object):
                 - detection_index (int): keypoint bbox index, useful for drawing keypoints.
         """
 
-        self.height, self.width = ori_img.shape[:2]
         # generate detections
         bbox_tlbr = self.tlwh_to_tlbr(bbox_tlwh)
-        features = self._get_features(bbox_tlbr, ori_img)
+        features = self._get_features(bbox_tlbr, rgb_img)
         detections = [Detection(bbox, features[i]) for i, bbox in enumerate(bbox_tlwh)]
 
         self.tracker.matches = []
@@ -48,7 +47,8 @@ class DeepSort(object):
         self.tracker.update(detections)
 
         if debug:
-            debug_img = self.debug_bboxes(ori_img, self.tracker.tracks, bbox_tlbr)
+            debug_img = rgb_img[...,::-1].copy()
+            self.debug_bboxes(debug_img, self.tracker.tracks, bbox_tlbr)
             return self.tracker.matches, debug_img
 
         return self.tracker.matches, None
@@ -81,19 +81,15 @@ class DeepSort(object):
 
     @staticmethod
     def debug_bboxes(image, tracks, detections):
-        state = {1: 'not-sure', 2: 'sure', 3: 'delete'}
-        img = image.copy()
-
         for track in tracks:
             # if track.is_comfirmed: continue
             x1, y1, x2, y2 = map(int, track.to_tlbr())
-            text = f'{track.track_id}: {state[track.state]}'
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 2)
-            cv2.putText(img, text, ((x1+x2)//2, (y1+y2)//2),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 255), 2)
+            text = f'{track.track_id}: update[{track.time_since_update}]'
+            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(image, text, ((x1+x2)//2, (y1+y2)//2),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
         for idx, det in enumerate(detections):
             x1, y1, x2, y2 = map(int, det)
-            cv2.rectangle(img, (x1,y1), (x2,y2), (255,0,0), 2)
-            cv2.putText(img, f'det: {idx}', (x1,y1-5),
+            cv2.rectangle(image, (x1,y1), (x2,y2), (255,0,0), 2)
+            cv2.putText(image, f'{idx}: detect', (x1,y1-5),
                         cv2.FONT_HERSHEY_COMPLEX, 0.8, (255,0,0), 2)
-        return img
