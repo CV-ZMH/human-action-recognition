@@ -4,8 +4,8 @@ import os
 import torch
 import torch2trt
 from fire import Fire
-from utils import parser
-from lib.pose_estimation.trtpose import TrtPose
+from utils.config import Config
+from lib.pose_estimation.trtpose.trtpose import TrtPose
 
 class ExportTrt(TrtPose):
     """Convert trtpose pytorch model to tensorrt"""
@@ -34,7 +34,7 @@ def main(cfg_file, save_name=None):
     save_name : save tensorrt name, default(None)
     """
 
-    cfg = parser.YamlParser(config_file=cfg_file)
+    cfg = Config(config_file=cfg_file)
     trtpose_cfg = cfg.TRTPOSE
     export_trt = ExportTrt(**trtpose_cfg, **trtpose_cfg.torch_model)
     export_trt(save_name)

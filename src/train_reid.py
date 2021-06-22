@@ -1,15 +1,14 @@
 import argparse
-
 import _init_paths
 import torch
 from torch.utils.data import DataLoader
 
-from utils.parser import YamlParser
-from tracker.deepsort import Trainer, Runner, RunBuilder
-from tracker.deepsort.datasets import Market1501, SiameseTriplet
-from tracker.deepsort.models import get_model
-from tracker.deepsort.loss import TripletLoss
+from utils.config import Config
+from tracker.trainer import Trainer, Runner, RunBuilder
+from tracker.loss import TripletLoss
 from tracker.deepsort.utils import get_transforms
+from tracker.deepsort.datasets import Market1501, SiameseTriplet
+from tracker.deepsort.get_reid import get_reid_network
 
 def parser():
     ap = argparse.ArgumentParser()
@@ -45,7 +44,7 @@ def get_dataloaders(reid_net, data_path, img_size, batch_size, workers, **kwargs
 
 def main():
     args = parser()
-    cfg = YamlParser(args.config_file)
+    cfg = Config(args.config_file)
     train_meta = cfg.TRAIN.fixed_params
     data_meta = cfg.DATASET
     runs = RunBuilder.get_runs(cfg.TRAIN.tune_params)
@@ -60,7 +59,7 @@ def main():
             **data_meta
         )
         # build model
-        model = get_model(train_meta.reid_net, num_classes, reid=False)
+        model = get_reid_network(train_meta.reid_net, num_classes, reid=False)
 
         # loss
         if train_meta.reid_net == 'wideresnet':

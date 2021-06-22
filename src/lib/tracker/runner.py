@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import time
-# from datetime import datetime
-from collections import namedtuple, OrderedDict
 from itertools import product
+from collections import namedtuple, OrderedDict
 
-# import pandas as pd
 import torch
 import torchvision
 from torch.utils.tensorboard import SummaryWriter

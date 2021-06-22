@@ -8,7 +8,7 @@ import _init_paths
 import os
 import numpy as np
 
-from utils import parser
+from utils.config import Config
 from utils.skeletons_io import load_skeleton_data
 from classifier.feature_procs import extract_multi_frame_features
 
@@ -42,7 +42,7 @@ def main():
     and then save features and labels to .csv file.
     '''
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_config.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
     window_size = cfg.window_size

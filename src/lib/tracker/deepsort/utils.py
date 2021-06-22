@@ -31,7 +31,6 @@ def get_transforms(H, W):
     return tfms
 
 def get_gaussian_mask(H, W):
-	#128 is image size
 	# We will be using 256x128 patch instead of original 128x128 path because we are using for pedestrain with 1:2 AR.
 	x, y = np.mgrid[0:1.0:complex(H), 0:1.0:complex(W)] #128 is input size.
 	xy = np.column_stack([x.flat, y.flat])

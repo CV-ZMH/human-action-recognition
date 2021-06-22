@@ -4,18 +4,19 @@ import torch
 
 from .sort.detection import Detection
 from .sort.tracker import Tracker
-from .get_extractor import Extractor
+from .feature_extractor import FeatureExtractor
 from .sort.nn_matching import NearestNeighborDistanceMetric
 __all__ = ['DeepSort']
 
 
 class DeepSort(object):
-    def __init__(self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True, **kwargs):
-
-        self.nms_max_overlap = 1.0
-        self.extractor = Extractor(**kwargs)
+    def __init__(self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, **kwargs):
+        self.extractor = FeatureExtractor(**kwargs)
         metric = NearestNeighborDistanceMetric(
-            "cosine", max_dist, nn_budget)
+            "cosine",
+            max_dist,
+            nn_budget
+            )
         self.tracker = Tracker(
             metric,
             max_iou_distance=max_iou_distance,

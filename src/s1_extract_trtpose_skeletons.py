@@ -6,16 +6,17 @@ import cv2
 from tqdm import tqdm
 from tabulate import tabulate
 
-from utils import utils, parser, vis
+from utils import utils, vis
+from utils.config import Config
 from utils.skeletons_io import ReadValidImagesAndActionTypesByTxt
-from pose_estimation import TrtPose
+from pose_estimation.trtpose.trtpose import TrtPose
 # from tracking import DeepSort
 
 
 def main():
     t0 = time.time()
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_config.yaml')
     cfg.merge_from_file('../configs/trtpose.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
 

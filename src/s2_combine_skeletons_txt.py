@@ -10,7 +10,9 @@ import numpy as np
 from collections import defaultdict
 from tqdm import tqdm
 from tabulate import tabulate
-from utils import parser, utils
+from utils import utils
+from utils.config import Config
+
 
 def skeleton_loader(files):
     for file in files:
@@ -22,7 +24,7 @@ def skeleton_loader(files):
 def main():
 
     # Settings
-    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_config.yaml')
     cfg_state = cfg[os.path.basename(__file__)]
 
     ## IO folders

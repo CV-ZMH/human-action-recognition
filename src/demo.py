@@ -5,10 +5,11 @@ import time
 import cv2
 import argparse
 
-from utils import utils, vis, parser
-from pose_estimation.trtpose import TrtPose
-from tracker.deepsort import DeepSort
-from classifier import MultiPersonClassifier
+from utils import utils, vis
+from utils.config import Config
+from pose_estimation.trtpose.trtpose import TrtPose
+from tracker.deepsort.deepsort import DeepSort
+from classifier.dnn_classifier.classifier import MultiPersonClassifier
 
 
 def get_args():
@@ -27,7 +28,7 @@ def get_args():
                     )
     # inference source
     ap.add_argument('--src',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/fun_theory_1.mp4',
+                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4',
                     help='input file for pose estimation, video or webcam',
                     )
     # thresholds for better result of tracking and action recognition
@@ -63,7 +64,7 @@ def get_args():
 def main():
     ## Configs
     args = get_args()
-    cfg = parser.YamlParser()
+    cfg = Config()
     cfg.merge_from_file(args.config_infer)
     cfg.merge_from_file(args.config_trtpose)
     t0 = time.time()

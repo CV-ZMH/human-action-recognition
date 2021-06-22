@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import sklearn.model_selection
 from sklearn.metrics import classification_report
 
-from utils import parser
+from utils.config import Config
 from utils.vis import plot_confusion_matrix
-from classifier import ClassifierOfflineTrain
+from classifier.dnn_classifier import ClassifierOfflineTrain
 
 def train_test_split(X, Y, ratio_of_test_size):
     ''' Split training data by ratio '''
@@ -58,7 +58,7 @@ def evaluate_model(model, classes, tr_X, tr_Y, te_X, te_Y):
 
 def main():
     # -- setting
-    cfg = parser.YamlParser(config_file='../configs/training_config.yaml')
+    cfg = Config(config_file='../configs/training_config.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
 

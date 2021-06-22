@@ -4,13 +4,11 @@ from PIL import Image
 
 import torch
 import torchvision.transforms as transforms
-from .models import get_model
+from .get_reid import get_reid_network
 from .utils import get_gaussian_mask, show_tensor
 
-model_root = '/home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights/tracker/deepsort'
 
-
-class Extractor(object):
+class FeatureExtractor(object):
     def __init__(self, reid_net, model_path, img_size, mean, std, gaussian_mask=False, use_cuda=True, **kwargs): #TODO gaussian mask
         self.device = "cuda" if torch.cuda.is_available() and use_cuda else "cpu"
         self.reid_net = reid_net

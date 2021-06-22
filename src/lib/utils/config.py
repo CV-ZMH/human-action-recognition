@@ -3,7 +3,7 @@ import os
 import yaml
 
 
-class YamlParser(dict):
+class Config(dict):
     """
     This is yaml parser to access data with attribute or dict
     """
@@ -18,8 +18,8 @@ class YamlParser(dict):
     def __setattr__(self, name, value):
         if isinstance(value, dict):
             value = self.__class__(data=value)
-        super(YamlParser, self).__setitem__(name, value)
-        super(YamlParser, self).__setattr__(name, value)
+        super(Config, self).__setitem__(name, value)
+        super(Config, self).__setattr__(name, value)
 
     __setitem__ = __setattr__
 
@@ -39,7 +39,7 @@ class YamlParser(dict):
         self.load_yaml(config_file)
 
 if __name__ == '__main__':
-    cfg = YamlParser(config_file='../configs/trtpose.yaml')
+    cfg = Config(config_file='../configs/trtpose.yaml')
     cfg.merge_from_file('../configs/deepsort.yaml')
     data = {
         "a": "aval",
@@ -50,6 +50,6 @@ if __name__ == '__main__':
                 }
             }
         }
-    data1 = YamlParser(data)
+    data1 = Config(data)
     print(cfg)
     print(data1)
