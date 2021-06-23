@@ -1,4 +1,4 @@
-from .dnn.classifier import MultiPersonClassifier
+from .dnn.classifier import MultiPersonClassifier, ClassifierOfflineTrain, ClassifierOnlineTest
 
 classifiers = {
     'dnn' : MultiPersonClassifier

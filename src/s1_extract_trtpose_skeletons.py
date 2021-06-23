@@ -10,14 +10,13 @@ from utils import utils, drawer
 from utils.config import Config
 from utils.skeletons_io import ReadValidImagesAndActionTypesByTxt
 from pose_estimation.trtpose.trtpose import TrtPose
-# from tracking import DeepSort
 
 
 def main():
     t0 = time.time()
     # Settings
-    cfg = Config(config_file='../configs/training_action_recogn_pipeline.yaml')
-    cfg.merge_from_file('../configs/trtpose.yaml')
+    cfg = Config(config_file='../configs/train_action_recogn_pipeline.yaml')
+    cfg.merge_from_file('../configs/infer_trtpose_deepsort_dnn.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
 
     img_format = cfg.img_format
@@ -32,7 +31,7 @@ def main():
     dst_imgs_info_txt = os.path.join(*cfg_stage.output.imgs_info_txt)
 
     # initiate trtpose
-    trtpose = TrtPose(**cfg.TRTPOSE)
+    trtpose = TrtPose(**cfg.POSE)
     # deepsort = DeepSort(**cfg.DEEPSORT)
 
      # Init output path
@@ -71,7 +70,7 @@ def main():
         key = cv2.waitKey(1)
         if key==27 or key==ord('q'):
             break
-        
+
         # save skeleton txt
         skeleton_txt = os.path.join(dst_skeletons_folder, save_name[:-4]+'.txt')
         save_data = [img_info + skeleton for skeleton in skeletons]

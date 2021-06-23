@@ -10,12 +10,11 @@ POSE:
     - pose_estimation
     - trtpose
     - densenet121_baseline_att_256x256_B_epoch_160_256x256.trt
-  ## this setting are needed to filter bad(fewer) person keypoints
+  ## below settings are needed to filter bad(fewer) person keypoints
   min_total_joints: 8
-  min_leg_joints: 4
+  min_leg_joints: 3
   include_head: True
 
-    # - densenet121_baseline_att_256x256_B_epoch_160.pth
 
 TRACKER:
   name: "deepsort"
@@ -51,4 +50,4 @@ CLASSIFIER:
      - *weight_root
      - classifier
      - dnn
-     - action_classifier_origin.pkl # action_classifier_origin, action_classifier_custom
+     - action_classifier2.pkl # action_classifier_origin, action_classifier_custom

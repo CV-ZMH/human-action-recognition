@@ -24,7 +24,7 @@ def skeleton_loader(files):
 def main():
 
     # Settings
-    cfg = Config(config_file='../configs/training_action_recogn_pipeline.yaml')
+    cfg = Config(config_file='../configs/train_action_recogn_pipeline.yaml')
     cfg_state = cfg[os.path.basename(__file__)]
 
     ## IO folders

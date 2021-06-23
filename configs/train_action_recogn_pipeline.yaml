@@ -54,6 +54,6 @@ s4_train_classifier.py:
         features_x: *features_x
         features_y: *features_y
     output:
-        model_path: ../weights/classifier/action_classifier2.pkl
+        model_path: ../weights/classifier/dnn/action_classifier2.pkl
 
 

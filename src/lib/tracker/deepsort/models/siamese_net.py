@@ -32,15 +32,12 @@ class SiameseNet(nn.Module):
 
             nn.Conv2d(512, 1024, kernel_size=1, stride=1),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(1024),
-
-            # nn.AvgPool2d((3, 1), 1)
+            nn.BatchNorm2d(1024), 
             )
 
     def forward_once(self, x):
         feat = self.net(x)
-        output = F.avg_pool2d(feat, feat.shape[2:])
-        # output = torch.squeeze(output)
+        output = F.avg_pool2d(feat, feat.shape[2:]) 
         return output
 
     def forward(self, input1, input2, input3=None):

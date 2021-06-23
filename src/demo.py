@@ -1,29 +1,29 @@
-# import _init_paths
+import _init_paths
 import time
 import argparse
 import os.path as osp
 
 import cv2
-from lib.pose_estimation import get_pose_estimator
-from lib.tracker import get_tracker
-from lib.classifier import get_classifier
-from lib.utils.config import Config
-from lib.utils.video import Video
-from lib.utils import utils, drawer
+from pose_estimation import get_pose_estimator
+from tracker import get_tracker
+from classifier import get_classifier
+from utils.config import Config
+from utils.video import Video
+from utils import utils, drawer
 
 
 def get_args():
     ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # configs
-    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='action',
+    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='track',
                     help='inference task for pose estimation, action recognition or tracking')
 
     ap.add_argument("--config", type=str,
-                    default="../configs/inference_trtpose_deepsort_dnn.yaml",
+                    default="../configs/infer_trtpose_deepsort_dnn.yaml",
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/aung_la_fight_cut_1.mp4',
+                    default='/home/zmh/hdd/Test_Videos/Tracking/park_1.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
@@ -75,6 +75,7 @@ def main():
 
             # if no keypoints, update tracked's time_since_update and it's age
             if len(keypoints_list) == 0 and args.task != 'pose':
+                debug_img = bgr_frame
                 tracker.increment_ages()
             else:
                 # draw keypoints only if task is 'pose'
@@ -124,7 +125,7 @@ def main():
                 MaxDist=cfg.TRACKER.max_dist,
                 MaxIoU=cfg.TRACKER.max_iou_distance,
                 TotalSpeed='{:.3f}s'.format(end_pipeline),
-                TotalTracks=len(tracks) if len(keypoints_list) > 0 else 0,
+                # TotalTracks=len(tracks) if len(keypoints_list) > 0 else 0,
                 # TrackSpeed='{:.3f}s'.format(end_track) if len(keypoints_list)>0 else 0,
                 )
 
@@ -135,14 +136,16 @@ def main():
                     suffix=output_suffix
                     )
                 writer = video.get_writer(final_img, output_path)
-                if args.debug:
+                if args.debug and args.task != 'pose':
                     debug_output_path = output_path[:-4] + '_debug.avi'
                     debug_writer = video.get_writer(debug_img, debug_output_path)
 
                 print(f'[INFO] Saving video to : {output_path}')
 
-            if args.debug:
+            if args.debug and args.task != 'pose':
                 debug_writer.write(debug_img)
+                key = video.show(debug_img, winname='debug_tracking')
+
             if args.save_folder:
                 writer.write(final_img)
 
@@ -150,15 +153,14 @@ def main():
                 final_img,
                 winname='webcam' if isinstance(source, int) else osp.basename(source)
             )
+
             if key == ord('q') or key == 27:
                 break
 
-    # except Exception as e:
-    #     print(f'\nERROR : {e}')
-    #     if args.debug:
-    #         debug_writer.release()
-    #     if args.save_folder:
-    #         writer.release()
+        if args.debug and args.task != 'pose':
+            debug_writer.release()
+        if args.save_folder:
+            writer.release()
 
     finally:
         video.stop()

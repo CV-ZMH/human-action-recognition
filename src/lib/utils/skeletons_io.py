@@ -158,7 +158,7 @@ class ReadValidImagesAndActionTypesByTxt(object):
         return img, img_action_label, img_info
 
     def imread(self, index):
-        return cv2.imread(self.imgs_path + self.get_filename(index))
+        return cv2.imread(os.path.join(self.imgs_path, self.get_filename(index)))
 
     def get_filename(self, index):
         # The 4th element of

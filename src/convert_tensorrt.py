@@ -31,15 +31,20 @@ class ExportTrt(TrtPose):
         torch.save(model_trt.state_dict(), output_path)
         print('[INFO] Saved to {}'.format(output_path))
 
-def main(cfg_file, save_name=None):
+def main(config_file, save_name=None):
     """Convert pytorch pose model to tensorrt
-    cfg_file : trtpose config file
+    cfg_file : must be trtpose config file. you can use 'infer_trtpose_deepsort_dnn.yaml' this also.
     save_name : save tensorrt name, default(None)
     """
 
-    cfg = Config(config_file=cfg_file)
-    trtpose_cfg = cfg.TRTPOSE
-    export_trt = ExportTrt(**trtpose_cfg)
+    cfg = Config(config_file)
+    pose_kwargs = cfg.POSE
+    model_path = pose_kwargs.model_path
+    model_path = model_path if not isinstance(model_path, (tuple, list)) \
+        else os.path.join(*model_path)
+
+    assert not model_path.endswith(".trt"), f'model file must be pytorch weight, \n{model_path}'
+    export_trt = ExportTrt(**pose_kwargs)
     export_trt(save_name)
 
 if __name__ == '__main__':

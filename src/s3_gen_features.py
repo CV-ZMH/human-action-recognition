@@ -42,7 +42,7 @@ def main():
     and then save features and labels to .csv file.
     '''
     # Settings
-    cfg = Config(config_file='../configs/training_action_recogn_pipeline.yaml')
+    cfg = Config(config_file='../configs/train_action_recogn_pipeline.yaml')
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
     window_size = cfg.window_size
