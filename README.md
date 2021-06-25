@@ -74,8 +74,7 @@ Action classifier is used from [this repo](https://github.com/felixchenfy/Realti
  </tr> 
 </table> 
       
-| Multi Person Action Recognition Demo|
- -->
+
 
 # Inference Speed
 Tested PC specification
