@@ -27,4 +27,4 @@ TRAIN:
         lr: [0.01, 0.009]
         optim: [SGD, Adam]
         gaussian_mask: [True, False]
-        batch_size: 32
+        batch_size: [32]

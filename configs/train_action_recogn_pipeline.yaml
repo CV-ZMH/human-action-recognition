@@ -1,29 +1,29 @@
-classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave'] # change with your custom classes
 
-img_format: "{:05d}.jpg"
+img_format: "{:05d}.jpg" # dataset image extensions
 window_size: 5 # Number of adjacent frames for extracting features.
-data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition
-extract_path: &extract_path extracted_data/raw_skeletons_512/
+data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition # main dataset path
+extract_path: &extract_path extracted_data/raw_skeletons_512/ # main dataset path/ extracted path
 
 s1_extract_trtpose_skeletons.py:
     input:
         valid_imgs:
-            - *data_root
-            - source_images3/valid_images.txt
+            - *data_root # main dataset path
+            - source_images3/valid_images.txt # training path
         imgs_folder:
             - *data_root
             - source_images3/
     output:
         skeletons_folder: &skels_folder
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - skeleton_res/
         imgs_folder:
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - image_res/
         imgs_info_txt:
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - images_info.txt
 
@@ -32,7 +32,7 @@ s2_combine_skeletons_txt.py:
         skeletons_folder: *skels_folder
     output:
         skeletons_txt: &skels_txt
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - all_skeletons.txt
 
@@ -41,11 +41,11 @@ s3_gen_features.py:
         skeletons_txt: *skels_txt
     output:
         features_x: &features_x
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - features_X.csv
         features_y: &features_y
-            - *data_root
+            - *data_root # main dataset path
             - *extract_path
             - features_Y.csv
 
@@ -54,6 +54,4 @@ s4_train_classifier.py:
         features_x: *features_x
         features_y: *features_y
     output:
-        model_path: ../weights/classifier/dnn/action_classifier2.pkl
-
-
+        model_path: ../weights/classifier/dnn/action_classifier2.pkl # classifier output path

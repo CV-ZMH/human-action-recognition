@@ -3,7 +3,7 @@ from tqdm import tqdm
 import torch
 from torch.backends import cudnn
 from torchvision import transforms
-from deepsort.utils import *
+from .deepsort.utils import get_gaussian_mask
 
 
 class Trainer:

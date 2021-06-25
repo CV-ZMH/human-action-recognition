@@ -15,7 +15,7 @@ from utils import utils, drawer
 def get_args():
     ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # configs
-    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='track',
+    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='pose',
                     help='inference task for pose estimation, action recognition or tracking')
 
     ap.add_argument("--config", type=str,
@@ -23,15 +23,15 @@ def get_args():
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    default='/home/zmh/hdd/Test_Videos/Tracking/park_1.mp4',
+                    # default='../test_data/aung_la.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
                     help='just need output folder, not filename. if None, result will not save.')
     ap.add_argument('--draw_kp_numbers', action='store_true',
                     help='draw keypoints numbers of each person')
-    ap.add_argument('--debug', action='store_true',
-                    default=True,
+    ap.add_argument('--debug_track', action='store_true',
+                    # default=True,
                     help='show and save for tracking bbox and detection bbox')
 
     return ap.parse_args()
@@ -93,7 +93,7 @@ def main():
 
                     # pass keypoints' bboxes to tracker
                     start_track = time.time()
-                    tracks, debug_img = tracker.update(bboxes, rgb_frame, debug=args.debug)
+                    tracks, debug_img = tracker.update(bboxes, rgb_frame, debug=args.debug_track)
                     end_track = time.time() - start_track
 
                     # classify tracked skeletons' actions
@@ -124,7 +124,7 @@ def main():
                 Frame=f'{video.frame_cnt}/{video.total_frames}',
                 MaxDist=cfg.TRACKER.max_dist,
                 MaxIoU=cfg.TRACKER.max_iou_distance,
-                TotalSpeed='{:.3f}s'.format(end_pipeline),
+                # TotalSpeed='{:.3f}s'.format(end_pipeline),
                 # TotalTracks=len(tracks) if len(keypoints_list) > 0 else 0,
                 # TrackSpeed='{:.3f}s'.format(end_track) if len(keypoints_list)>0 else 0,
                 )
@@ -136,13 +136,13 @@ def main():
                     suffix=output_suffix
                     )
                 writer = video.get_writer(final_img, output_path)
-                if args.debug and args.task != 'pose':
+                if args.debug_track and args.task != 'pose':
                     debug_output_path = output_path[:-4] + '_debug.avi'
                     debug_writer = video.get_writer(debug_img, debug_output_path)
 
                 print(f'[INFO] Saving video to : {output_path}')
 
-            if args.debug and args.task != 'pose':
+            if args.debug_track and args.task != 'pose':
                 debug_writer.write(debug_img)
                 key = video.show(debug_img, winname='debug_tracking')
 
@@ -157,7 +157,7 @@ def main():
             if key == ord('q') or key == 27:
                 break
 
-        if args.debug and args.task != 'pose':
+        if args.debug_track and args.task != 'pose':
             debug_writer.release()
         if args.save_folder:
             writer.release()

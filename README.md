@@ -1,26 +1,63 @@
-# Simple Multi-Person Human Activity Recognition  
+# Simple Real Time Multi Person Action Recognition  
 
-This is the multi person action recognition pipeline with pose estimation as `trt_pose`, tracking as `deepsort` and action classifier as `simple dnn classifier` .
+## News
+:boom:  Added trained weights of [**siamesenet**](https://github.com/abhyantrika/nanonets_object_tracking/blob/master/siamese_net.py) and [**aligned reID**](https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch) networks and training script. They are used in cosine metric learnings of deep sort pipeline.
 
-Original [repo](https://github.com/felixchenfy/Realtime-Action-Recognition) is with `tfpose`, tracking based on `euclidean distance of skeletons motions` and action classifier as `simple dnn classifier`.  
+:boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes.
 
+:boom: IoU matching step required for tracked bboxes ID and keypoints' bboxes index is directly replaced  with deepsort matching cascade.
 
-> 9 actions : ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
+:boom: Fixed and cleaned for deepsort bbox input format as *xmin, ymin, xmax, ymax*.
 
-|<img src="assets/aung_la.gif"  width="480" height="320"/> |
-|:--:|
-| __Multi Person Activity Analysis Demo__ |
+:boom: Added current frame detailed and config parameters in left side of the display.
+
 
 ## Table of Contents
-
-- [1. Installation](#1-installation)
-- [2. Quick Demo](#2-quick-demo)
-- [3. Training Action Recognition](#3-trainingg-action-recognition)
-- [4. References](#4-references)
+- [1. Overview](#1-overview)
+- [2. Inference Speed Comparison](#2-inference-speed)
+- [3. Installation](#3-installation)
+- [4. Quick Demo](#4-quick-demo)
+- [5. Training](#5-training)
+    - [5.1 Training for action classifier](#5-1-training-for-action-classifier)
+    - [5.2 Training reID network for deepsort](#5-2-training-reid-network-for-deepsort)
+- [6. References](#6-references)
 ---
-## 1. Installation
 
-Firtst, Python >= 3.6
+## Overview
+> Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
+
+<!-- |<img src="assets/aung_la.gif"  width="480" height="320"/> |
+|:--:|
+| Multi Person Action Recognition Demo | -->
+
+This is the 3 steps multi-person action recognition pipeline using
+1. pose estimation with [trtpose](https://github.com/NVIDIA-AI-IOT/trt_pose)
+2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
+3. action classifier with [dnn](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram)
+
+You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
+
+Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
+
+## Inference Speed
+Tested PC specification
+
+- **OS**: Ubuntu 18.04
+- **CPU**: i7-8750H @ 4.100GHz
+- **GPU**:  RTX 2060
+- **CUDA**: 10.2
+- **TensorRT**: 7.1.3.4
+
+| Pipeline Step | Step's Input Size (H, W) | FPS|
+| -  | - | - |
+| trtpose  | (256x256) | 25  |
+| trtpose + deepsort | (256x256) + (256x128) | 18 |
+| trtpose + deepsort + dnn | (256x256) + (256x128) + (-) | 15 |
+
+
+## 3. Installation
+
+First, Python >= 3.6
 
 ### Step 1 - Install Dependencies
 
@@ -47,88 +84,125 @@ sudo python setup.py install
 ```
 Other python packages are in [`requirements.txt`](requirements.txt).
 
-Run this command to install them.
+Run below command to install them.
 ```bash
 pip install -r requirements.txt
 ```
 ---
 
-## 2. Quick Demo
+## 4. Quick Demo
 
+### 4.1- Download the Pretrained Models
+Action Classifier Pretrained models are already uploaded in the path `weights/classifier/dnn`.
 - Download the pretrained weight files to run the demo.
-
 | Model | Weight |
 |---|---|
-| *Trt_Pose* | [densenet121_trtpose](https://drive.google.com/open?id=13FkJkx7evQ1WwP54UmdiDXWyFMY1OxDU) |
-| *Deepsort*| [reid.pth](https://drive.google.com/file/d/1QNPSAWiK09tAXAw2afJI7ECiYixMDoep/view?usp=sharing)|
+| *Trt_Pose (densenet121)* | [weight](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
+| *Deepsort (original reid)*| [weight](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
+| *Deepsort (siamese reid)*| [weight](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
+| *Deepsort (align reid)*| [weight](https://drive.google.com/file/d/1WKv1QJFuWNVh_GLzQ_Ssu9XXSNR2s2b5/view?usp=sharing)|
 
 - Then put them to these folder
-    - *trt_pose* weight to `weights/pose_estimation/trtpose`.
     - *deepsort* weight to `weights/tracker/deepsort/`
+    - *trt_pose* weight to `weights/pose_estimation/trtpose`.
 
+### 4.2- Convert TrTPose to TensorRT (Optional)
 
-- Then convert the *trt_pose* weight for `tensorrt` model.
+If you don't have installed tensorrt on your system, just skip this step. You just need to set trtpose pytorch model path of the [model path]() in the config.
 
-- *Note**:  **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/trtpose_config.yaml#L4) parameter in `configs/trtpose_config.yaml` file.
+Run the below command to convert  TrtPose pytorch weight to tensorrt.
 ```bash
 # check the IO weight file in configs/trtpose.yaml
-cd src && python convert_model.py
+cd src
+python convert_tensorrt.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
 ```
+ *Note*:  original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size]() parameter in `configs/infer_trtpose_deepsort_dnn.yaml` file.
 
-- Before running **`demo.py`**,  you need to check the config files [confiigs/inference_config.yaml](confiigs/inference_config.yaml) and [configs/trtpose.yaml](configs/trtpose.yaml)
-- **Arguments** (*arg mean important parameter to get better tracking accuracy and action recognition):
-    - __mode__ (action or track) - Inference mode for _Action Recognition_ or _Tracking_.
-    - __config_infer__ - inference config file path. (default=../configs/inference_config.yaml)
-    - __config_trtpose__ - trtpose config file path. (default=../configs/trtpose_config.yaml)
-    - __src__ - source file path to predict action or track. If not provided, it will use __webcam__ source as default.
-    - __pair_iou_thresh__ - this threshold is used during tracking bbox and skeleton bbox ID association with that IoU threshold as tracking post processing. (default=0.5)
-    - *__min_joints__ - minimum total joints required for  tracking and action recognition process. (default=8).
-    - *__min_leg_joints__ - minimum leg joints required for tracking and action recognition process.(default=3).
-    - __draw_kp_numbers__ - flag to draw keypoint numbers of each person during visualization.
-    - __save_folder__ - save the result video folder path. Output name format is "{source name} {mode} {trtpose input size}.avi". If  not provided, it will not save the result video.
+### 4.3- Run Demo.py
 
+Arguments list of `Demo.py`
+- **task** [pose, track, action] : Inference mode for testing _Pose Estimation_, _Tracking_ or _Action Recognition_.
+- **config** : inference config file path. (default=../configs/inference_config.yaml)
+- **source** : video file path to predict action or track. If not provided, it will use *webcam* source as default.
+- **save_folder** : save the result video folder path. Output filename format is composed of "_{source video name/webcam}{pose network name}{deepsort}{reid network name}{action classifier name}.avi_". If  not provided, it will not save the result video.
+- **draw_kp_numbers** : flag to draw keypoint numbers of each person for visualization.
+- **debug_track** : flag to debug tracking for tracker's bbox state and current detected bbox of tracker's inner process with bboxes visualization.
 
-- Run **action recogniiton**.
+Before running the demo.py, you need to change some parameters in
+ [confiigs/infer_trtpose_deepsort_dnn.yaml]() file.
+
+Examples:
+-  To use different reid network, [`reid_net`]() and it's [`model_path`]() in `TRACKER` node.
+- Set also [`model_path`] of trtpose  in `POSE` node.
+- You can also tune other parameters of `TRACKER` node and `POSE` node for better tracking and action recognition result.
+
+Then, Run **action recogniiton**.
 ```bash
 cd src
-# for video, use --src flag to your video path
-python demo.py --mode action --src ../test_data/fun_theory.mp4 --save_path ../output
-# for webcam, use --src flag to 0
-python demo.py --mode action --src 0 --save_path ../output
+# for video, use --source flag to your video path
+python demo.py --task action --source ../test_data/fun_theory.mp4 --save_folder ../output --debug_track
+# for webcam, no need to provid --source flag
+python demo.py --task action --save_path ../output --debug_track
 ```
 
-- Run **person skeleton tracking**.
+Run **pose tracking**.
 ```bash
 # for video, use --src flag to your video path
-python demo.py --mode track --src ../test_data/fun_theory.mp4 --save_path ../output
-# for webcam, use --src flag to 0
-python demo.py --mode track --src 0 --save_path ../output
+python demo.py --task track --source ../test_data/fun_theory.mp4 --save_path ../output
+# for webcam, no need to provid --source flag
+python demo.py --task track --save_path ../output
+```
+
+Run **pose estimation** only.
+```bash
+# for video, use --src flag to your video path
+python demo.py --task pose --source ../test_data/fun_theory.mp4 --save_path ../output
+# for webcam, no need to provid --source flag
+python demo.py --task pose --save_path ../output
 ```
 ---
 
-## 3. Training Action Recognition
+## 5. Training
 
-- Download the sample training dataset from [original repo](https://drive.google.com/open?id=1V8rQ5QR5q5zn1NHJhhf-6xIeDdXVtYs9)
+### 5.1 Train for Action Classifier
+- For this step, it's almost same preparations as original repo to train action classifier. You can directly reference of dataset preparation, feature extraction information and training information from the [original repo](https://github.com/felixchenfy/Realtime-Action-Recognition).
+- Then, Download the sample training dataset from the [original repo](https://drive.google.com/open?id=1V8rQ5QR5q5zn1NHJhhf-6xIeDdXVtYs9)
 
-- Modify the [data_root](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/training_config.yaml#L5) and [extract_path](https://github.com/CV-ZMH/human_activity_recognition/blob/d5c1d25b62c2147994d06ed3eda12a85b03ceeef/configs/training_config.yaml#L6) with your IO dataset path in [configs/training_config.yaml](configs/training_config.yaml).
+- Modify the [`data_root`]() and [`extract_path`]() with your IO dataset path in [configs/train_action_recogn_pipeline.yaml](configs/train_action_recogn_pipeline.yaml).
 
-- Depend on your need, you may change [configs/training_config.yaml](configs/training_config.yaml).
+- Depend on your custom action training, you have to change the parameters in  [configs/train_action_recogn_pipeline.yaml](configs/train_action_recogn_pipeline.yaml).
 
-- Then run training pipeline
+- Then run below command to train action classifier step by step.
 ```bash
-./run_training_trtpose_action.sh
+cd src && bash ./train_trtpose_dnn_action.sh
+```
+
+### 5.2  Train for Tracker reID Network [optional]
+To train different reid network for cosine metric learning used in deepsort:
+- Download the reid dataset [Market1501](https://www.kaggle.com/pengcw1/market-1501/data)
+- Prepare dataset with this command.
+```bash
+cd src && python prepare_market1501.py --root (your dataset root)
+```
+- Modify the [`tune_params`]() for multiple runs to find hyper parameter search as your need.
+
+- Then run below to train reid network.
+```bash
+cd src && python train_reid.py --config ../configs/train_reid.yaml
 ```
 ---
-## 4. References
-Most of the action recognition training and features extraction code are inspired from  the [realtime action recognition](https://github.com/felixchenfy/Realtime-Action-Recognition) repo.
+## 6. References
+- [realtime action recognition](https://github.com/felixchenfy/Realtime-Action-Recognition)
+- [nvidia trt_pose](https://github.com/NVIDIA-AI-IOT/trt_pose/blob/master/README.md)
+- [DeepSort](https://github.com/nwojke/deep_sort)
+- [Pytorch Deepsort YOLOv5](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
+- [Aligned Reid Network](https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch)
 
-Pose Estimation codes are inspired from [nvidia trt_pose](https://github.com/NVIDIA-AI-IOT/trt_pose/blob/master/README.md) repo.
-
- Tracking codes are mainly references from [Yolov5_DeepSort_Pytorch](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch) repo.
-
-## To Do
-
-- [ ] add more trackers like fair-mot
-- [ ] add tr_tpose estimation training code
-- [ ] add more action classifier based on LSTM
-- [x] add speed measurement for realtime
+## 7. TODO  
+- [x] Add FPS of current frame.
+- [x] Fix ID matching after matching cascade in DeepSort
+- [x] Add different reid network used in DeepSort
+- [ ] Add open_pifpaf pose estimation
+- [ ] Add norfair tracker
+- [ ] Add other action recognition network.
+- [ ] Train on different datasets, loss strategies, reid networks for deepsort tracking.

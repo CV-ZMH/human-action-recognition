@@ -4,7 +4,8 @@ import torch
 from torch.utils.data import DataLoader
 
 from utils.config import Config
-from tracker.trainer import Trainer, Runner, RunBuilder
+from tracker.trainer import Trainer
+from tracker.runner import Runner, RunBuilder
 from tracker.loss import TripletLoss
 from tracker.deepsort.utils import get_transforms
 from tracker.deepsort.datasets import Market1501, SiameseTriplet
@@ -12,8 +13,8 @@ from tracker.deepsort.get_reid import get_reid_network
 
 def parser():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--config_file', type=str, help='train config file path',
-                    default='../configs/training_reid.yaml')
+    ap.add_argument('--config', type=str, help='train config file path',
+                    default='../configs/train_reid.yaml')
     ap.add_argument('--gpu', type=int, help='gpu device id, -1 is cpu, (default=0)',
                     default='0')
 
@@ -44,7 +45,7 @@ def get_dataloaders(reid_net, data_path, img_size, batch_size, workers, **kwargs
 
 def main():
     args = parser()
-    cfg = Config(args.config_file)
+    cfg = Config(args.config)
     train_meta = cfg.TRAIN.fixed_params
     data_meta = cfg.DATASET
     runs = RunBuilder.get_runs(cfg.TRAIN.tune_params)

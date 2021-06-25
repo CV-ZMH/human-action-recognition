@@ -7,6 +7,7 @@ import torch2trt
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
+
 from trt_pose import models, coco
 from trt_pose.parse_objects import ParseObjects
 
@@ -16,22 +17,26 @@ class TrtPose:
 
     _params = OrderedDict(
             json='human_pose.json',
-            model_path='weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160_trt_1.4.0+cu100.pth',
             backbone='densenet121',
             cmap_threshold=0.1,
-            link_threshold=0.1
+            link_threshold=0.1,
             )
 
-    def __init__(self, size, **kwargs):
+    def __init__(self, size, model_path, min_leg_joints, min_total_joints, include_head=True, **kwargs):
         self.__dict__.update(self._params)
         self.__dict__.update(kwargs)
 
+        self.min_total_joints = min_total_joints
+        self.min_leg_joints = min_leg_joints
+        self.include_head = include_head
+
         if not isinstance(size, (tuple, list)):
             size = (size, size)
-        if isinstance(self.model_path, (tuple, list)):
-            self.model_path = os.path.join(*self.model_path)
+        if isinstance(model_path, (tuple, list)):
+            model_path = os.path.join(*model_path)
+        self.height,self.width = size
+        self.model_path = model_path
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.width, self.height = size
 
         # load humanpose json data
         self.meta = self.load_json(self.json)

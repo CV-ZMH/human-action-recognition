@@ -1,8 +1,9 @@
 weight_root: &weight_root "/home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights"
 
+# for pose estimation
 POSE:
   name: 'trtpose'
-  size: 256
+  size: 256 # height, width
   backbone: densenet121
   json: lib/pose_estimation/trtpose/human_pose.json
   model_path:
@@ -15,7 +16,7 @@ POSE:
   min_leg_joints: 3
   include_head: True
 
-
+# for Tracker
 TRACKER:
   name: "deepsort"
   max_dist: 0.2 #0.15
@@ -38,8 +39,9 @@ TRACKER:
     - *weight_root
     - tracker
     - deepsort
-    - siamese_reid_ep141.pth # wideresnet_reid_ep125, siamese_reid_ep141
+    - siamese_reid.pth # wide_residual_reid, siamese_reid
 
+# for action classifier
 CLASSIFIER:
   ## custom model
   name: "dnn"
@@ -50,4 +52,4 @@ CLASSIFIER:
      - *weight_root
      - classifier
      - dnn
-     - action_classifier2.pkl # action_classifier_origin, action_classifier_custom
+     - action_classifier.pkl # action_classifier_origin, action_classifier_custom
