@@ -15,7 +15,7 @@ from utils import utils, drawer
 def get_args():
     ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # configs
-    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='pose',
+    ap.add_argument('--task', choices=['pose', 'track', 'action'], default='action',
                     help='inference task for pose estimation, action recognition or tracking')
 
     ap.add_argument("--config", type=str,
@@ -23,7 +23,7 @@ def get_args():
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    # default='../test_data/aung_la.mp4',
+                    default='../test_data/aung_la.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
@@ -159,7 +159,7 @@ def main():
 
         if args.debug_track and args.task != 'pose':
             debug_writer.release()
-        if args.save_folder:
+        if args.save_folder and len(keypoints_list) > 0:
             writer.release()
 
     finally:

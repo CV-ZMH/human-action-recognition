@@ -46,10 +46,9 @@ CLASSIFIER:
   ## custom model
   name: "dnn"
   classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
-  # classes: ['sit', 'stand', 'walk', 'falling']
   window_size: 5 # 5, 8
   model_path:
      - *weight_root
      - classifier
      - dnn
-     - action_classifier.pkl # action_classifier_origin, action_classifier_custom
+     - action_classifier2.pkl # action_classifier
