@@ -136,10 +136,10 @@ Action Classifier Pretrained models are already uploaded in the path `weights/cl
       
 | Model | Weight |
 |---|---|
-| *Trt_Pose (densenet121)* | [weight](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
-| *Deepsort (original reid)*| [weight](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
-| *Deepsort (siamese reid)*| [weight](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
-| *Deepsort (align reid)*| [weight](https://drive.google.com/file/d/1WKv1QJFuWNVh_GLzQ_Ssu9XXSNR2s2b5/view?usp=sharing)|
+| Trt_Pose (*densenet121*) | [weight](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
+| Deepsort (*original reid*)| [weight](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
+| Deepsort (*siamese reid*)| [weight](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
+| Deepsort (*align reid*)| [weight](https://drive.google.com/file/d/1WKv1QJFuWNVh_GLzQ_Ssu9XXSNR2s2b5/view?usp=sharing)|
 
 - Then put them to these folder
     - *deepsort* weight to `weights/tracker/deepsort/`
