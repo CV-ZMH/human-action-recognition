@@ -5,7 +5,7 @@
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
 
-:boom: IoU matching step required for tracked bboxes ID and keypoints' bboxes index is directly replaced  with deepsort matching cascade.
+:boom: IoU matching step required for tracked bboxes ID and keypoints' bboxes index is directly replaced after the process of deepsort matching cascade.
 
 :boom: Fixed and cleaned for deepsort bbox input format as *xmin, ymin, xmax, ymax*.
 
