@@ -35,12 +35,6 @@ Table of Contents
 ---
 
 # Overview
-> Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
-
-|<img src="assets/aung_la.gif"  width="416" height="256"/> |
-|:--:|
-| Multi Person Action Recognition Demo|
-
 This is the 3 steps multi-person action recognition pipeline using
 1. pose estimation with [trtpose](https://github.com/NVIDIA-AI-IOT/trt_pose)
 2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
@@ -49,6 +43,39 @@ This is the 3 steps multi-person action recognition pipeline using
 You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
 
 Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
+
+
+> Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
+
+<table style="width:100%; table-layout:fixed;">
+ <tr>
+    <td><img width="448" height="256" src="assets/aung_la.gif"></td>
+    <td><img width="448" height="256" src="assets/aung_la_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Fight scene demo<font></td>
+    <td align="center"><font size="1">Fight scene debug demo<font></td>   
+ </tr>
+ <tr>
+    <td><img width="448" height="256" src="assets/fun_theory.gif"></td>
+    <td><img width="448" height="256" src="assets/fun_theory_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Street scene demo<font></td>
+    <td align="center"><font size="1">Street scene debug demo<font></td>   
+ </tr> 
+ <tr>
+    <td><img width="448" height="256" src="assets/street_walk.gif"></td>
+    <td><img width="448" height="256" src="assets/street_walk_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Street Walk demo<font></td>
+    <td align="center"><font size="1">Street Walk debug demo<font></td>   
+ </tr> 
+</table> 
+      
+| Multi Person Action Recognition Demo|
+ -->
 
 # Inference Speed
 Tested PC specification
