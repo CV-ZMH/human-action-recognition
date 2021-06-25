@@ -69,8 +69,8 @@ Action classifier is used from [this repo](https://github.com/felixchenfy/Realti
     <td><img width="448" height="256" src="assets/street_walk_debug.gif"></td>
  </tr>
  <tr>
-    <td align="center"><font size="1">Street Walk demo<font></td>
-    <td align="center"><font size="1">Street Walk debug demo<font></td>   
+    <td align="center"><font size="1">Street walk demo<font></td>
+    <td align="center"><font size="1">Street walk debug demo<font></td>   
  </tr> 
 </table> 
       
@@ -133,6 +133,7 @@ pip install -r requirements.txt
 ## Step 1 - Download the Pretrained Models
 Action Classifier Pretrained models are already uploaded in the path `weights/classifier/dnn`.
 - Download the pretrained weight files to run the demo.
+      
 | Model | Weight |
 |---|---|
 | *Trt_Pose (densenet121)* | [weight](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
