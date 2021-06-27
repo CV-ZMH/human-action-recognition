@@ -42,7 +42,8 @@ This is the 3 steps multi-person action recognition pipeline using
 
 You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
 
-Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
+Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also. 
+:exclamation: The original dataset is only extracted 1 person and 1 view point from camera, the action classification result isn't good enough in other tested video (i.e., hard to recognize of other person's video). 
 
 
 > Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
@@ -154,7 +155,7 @@ Run the below command to convert  TrtPose pytorch weight to tensorrt.
 cd src
 python convert_tensorrt.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
 ```
-:bangbang:  Original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L6) parameter in `configs/infer_trtpose_deepsort_dnn.yaml` file.
+:bangbang:  Original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L6) parameter in [`configs/infer_trtpose_deepsort_dnn.yaml`](configs/infer_trtpose_deepsort_dnn.yaml) file.
 
 ## Step 3 - Run Demo.py
 
@@ -167,12 +168,12 @@ Arguments list of `Demo.py`
 - **debug_track** : flag to debug tracking for tracker's bbox state and current detected bbox of tracker's inner process with bboxes visualization.
 
 :bangbang:	Before running the `demo.py`, you need to change some parameters in
- [confiigs/infer_trtpose_deepsort_dnn.yaml](confiigs/infer_trtpose_deepsort_dnn.yaml) file.
+ [confiigs/infer_trtpose_deepsort_dnn.yaml](configs/infer_trtpose_deepsort_dnn.yaml) file.
 
 Examples:
--  To use different reid network, [`reid_net`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L37) and it's [`model_path`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L38) in `TRACKER` node.
-- Set also [`model_path`] of trtpose  in `POSE` node.
-- You can also tune other parameters of `TRACKER` node and `POSE` node for better tracking and action recognition result.
+-  To use different reid network, [`reid_net`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L37) and it's [`model_path`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L38) in [`TRACKER`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L20) node.
+- Set also [`model_path`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L13) of trtpose  in [`POSE`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L4) node.
+- You can also tune other parameters of [`TRACKER`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L20) node and [`POSE`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L4) node for better tracking and action recognition result.
 
 Then, Run **action recogniiton**.
 ```bash
