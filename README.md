@@ -9,7 +9,7 @@
 
 :boom: Fixed and cleaned for deepsort bbox input format as *xmin, ymin, xmax, ymax*.
 
-:boom: Added current frame detailed and config parameters in left side of the display.
+:boom: Added current frame details and config parameters in left side of the display.
 
 
 Table of Contents
