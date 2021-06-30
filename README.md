@@ -5,8 +5,6 @@
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
 
-:boom: IoU matching step required for tracked bboxes ID and keypoints' bboxes index is directly replaced after the process of deepsort matching cascade.
-
 :boom: Fixed and cleaned for deepsort bbox input format as *xmin, ymin, xmax, ymax*.
 
 :boom: Added current frame details and config parameters in left side of the display.
@@ -39,6 +37,9 @@ This is the 3 steps multi-person action recognition pipeline using
 1. pose estimation with [trtpose](https://github.com/NVIDIA-AI-IOT/trt_pose)
 2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
 3. action classifier with [dnn](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram)
+
+> Overview of Action Recognition Pipeline  
+![](assets/Program_flow.png)
 
 You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
 
