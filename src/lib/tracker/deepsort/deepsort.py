@@ -6,6 +6,7 @@ from .sort.detection import Detection
 from .sort.tracker import Tracker
 from .feature_extractor import FeatureExtractor
 from .sort.nn_matching import NearestNeighborDistanceMetric
+
 __all__ = ['DeepSort']
 
 

@@ -96,7 +96,7 @@ def draw_trtpose(image,
             cv2.circle(image, center, thickness, points_color[int(kp[0])], thickness+2)
         if draw_numbers:
             cv2.putText(image, str(int(kp[0])), center, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                    0.6 if thickness==1 else 1, colors['red'], 1)
+                    0.8 if thickness==1 else 1, colors['red'], 1)
 
      # draw line on image
     for pair_idx, pair in enumerate(limb_pairs):
@@ -107,7 +107,7 @@ def draw_trtpose(image,
         else:
             # print(pair_idx, LR[pair_idx])
             cv2.line(image, centers[pair[0]], centers[pair[1]], \
-                     colors['blue'] if LR[pair_idx] else colors['red'],
+                     colors[line_color],
                      thickness)
 
 

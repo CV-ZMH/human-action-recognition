@@ -23,12 +23,13 @@ def get_args():
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    default='../test_data/aung_la.mp4',
+                    default='../test_data/stand.jpg',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
                     help='just need output folder, not filename. if None, result will not save.')
     ap.add_argument('--draw_kp_numbers', action='store_true',
+                    default=True,
                     help='draw keypoints numbers of each person')
     ap.add_argument('--debug_track', action='store_true',
                     # default=True,
@@ -67,7 +68,7 @@ def main():
     try:
         # loop over the video frames
         for bgr_frame in video:
-            rgb_frame= cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
+            rgb_frame = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
             # predict pose estimation
             start_pose = time.time()
             keypoints_list = pose_estimator.predict(rgb_frame)
@@ -83,7 +84,8 @@ def main():
                     drawer.draw_persons_keypoints(
                         bgr_frame,
                         keypoints_list,
-                        draw_numbers=args.draw_kp_numbers
+                        draw_numbers=args.draw_kp_numbers,
+                        line_color='white'
                     )
                 # tracking / actions
                 else:
