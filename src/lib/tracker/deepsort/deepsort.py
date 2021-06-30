@@ -44,7 +44,7 @@ class DeepSort(object):
 
         self.tracker.matches = []
         # update tracker
-        self.tracker.predict() # update track_id's time_since_update and age increasement
+        self.tracker.predict() # update track_id's time_since_update and hit increasement
         self.tracker.update(detections)
 
         if debug:
