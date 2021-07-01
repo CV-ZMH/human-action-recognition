@@ -104,7 +104,7 @@ Check this [installation guide](https://github.com/CV-ZMH/Installation-Notes-for
 
 Here is required packages for this project and you need to install each of these.
 1. Nvidia-driver 450
-2. [Cuda-10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=deblocal) and [Cudnn 8.0.2](https://developer.nvidia.com/rdp/cudnn-archive)
+2. [Cuda-10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=deblocal) and [Cudnn 8.0.5](https://developer.nvidia.com/rdp/cudnn-archive)
 3. [Pytorch 1.7.1](https://pytorch.org/get-started/previous-versions/) and [Torchvision 0.8.2](https://pytorch.org/get-started/previous-versions/)
 4. [TensorRT 7.1.3](https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-723/install-guide/index.html)
 
