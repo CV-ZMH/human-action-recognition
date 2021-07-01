@@ -154,7 +154,7 @@ Run the below command to convert  TrtPose pytorch weight to tensorrt.
 ```bash
 # check the IO weight file in configs/trtpose.yaml
 cd src
-python convert_tensorrt.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
+python convert_tensorrt.py --config ../configs/infer_trtpose_deepsort_dnn.yaml
 ```
 :bangbang:  Original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L6) parameter in [`configs/infer_trtpose_deepsort_dnn.yaml`](configs/infer_trtpose_deepsort_dnn.yaml) file.
 
