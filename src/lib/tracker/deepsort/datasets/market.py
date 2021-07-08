@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 
 if __package__:
     from .basedataset import BaseDataset
-    from ..utils import show_tensor
 else:
     import sys
     sys.path.insert(0, '..')
@@ -12,8 +11,6 @@ else:
     import torchvision
     from torchvision import transforms
     from basedataset import BaseDataset
-    from utils import show_tensor
-
 
 class Market1501(BaseDataset):
     def __getitem__(self, index):
@@ -36,4 +33,3 @@ if __name__ == '__main__':
     if isinstance(imgs, (tuple, list)):
         imgs = torch.cat([imgs[0], imgs[1], imgs[2]], dim=-1)
     grid = torchvision.utils.make_grid(imgs, nrow=imgs.shape[0]//6)
-    show_tensor(grid)

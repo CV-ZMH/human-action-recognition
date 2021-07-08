@@ -77,6 +77,7 @@ class WideResnet(nn.Module):
         self.avgpool = nn.AvgPool2d((8*2, 4*2), 1)
         # 512 1 1
         self.reid = reid
+        # if not self.reid:
         self.classifier = nn.Sequential(
             nn.Linear(512, 256),
             nn.BatchNorm1d(256),

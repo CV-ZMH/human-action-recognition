@@ -3,6 +3,7 @@ import os
 import mimetypes
 from pathlib import Path
 from typing import Iterable
+import cv2
 import numpy as np
 from .commons import *
 
@@ -84,7 +85,7 @@ def keypoints_to_bbox(keypoints_list, image):
         ymax = np.nanmax(keypoints[:,1])
         bbox = expand_bbox(xmin, xmax, ymin, ymax, img_w, img_h)
         # discard bbox with width and height == 0
-        if bbox[2] == 0 or bbox[3] == 0:
+        if bbox[2] < 1 or bbox[3] < 1:
             continue
         bboxes.append(bbox)
     return np.asarray(bboxes)
@@ -129,3 +130,14 @@ def get_files(path, extensions=None, recurse=False, include=None):
     else:
         f = [o.name for o in os.scandir(path) if o.is_file()]
         return sorted(_get_files(path, f, extensions))
+
+def show_tensor(tensor):
+    np_img = tensor.cpu().numpy().transpose(1, 2, 0)
+    cv2.namedWindow('display', cv2.WND_PROP_FULLSCREEN)
+    try:
+        cv2.imshow('display', np_img[...,::-1])
+        cv2.waitKey(0)
+    except Exception as e:
+        print(f'ERROR {e}')
+    finally:
+        cv2.destroyAllWindows()

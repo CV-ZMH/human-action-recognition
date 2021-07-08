@@ -3,8 +3,9 @@ from torch import nn
 from torch.nn import functional as F
 
 class SiameseNet(nn.Module):
-    def __init__(self, **kwargs):
+    def __init__(self, reid=False, **kwargs):
         super(SiameseNet, self).__init__()
+        self.reid = reid
         self.net = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, stride=2),
             nn.ReLU(inplace=True),
@@ -32,18 +33,21 @@ class SiameseNet(nn.Module):
 
             nn.Conv2d(512, 1024, kernel_size=1, stride=1),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(1024), 
+            nn.BatchNorm2d(1024),
             )
 
-    def forward_once(self, x):
+    def forward(self, x):
         feat = self.net(x)
-        output = F.avg_pool2d(feat, feat.shape[2:]) 
+        size = [int(s) for s in feat.size()[2:]]
+        output = F.avg_pool2d(feat, size)
+        if self.reid:
+            output.squeeze_(2).squeeze_(2)
+            output.div_(output.norm(p=2, dim=1, keepdim=True))
         return output
 
-    def forward(self, input1, input2, input3=None):
+    def forward_twice(self, input1, input2, input3=None):
         output1 = self.forward_once(input1)
         output2 = self.forward_once(input2)
-
         if input3 is not None:
             output3 = self.forward_once(input3)
             return output1, output2, output3

@@ -1,4 +1,4 @@
-weight_root: &weight_root "/home/zmh/hdd/Custom_Projects/action_recognition/my_action_recogn_dev/weights"
+weight_root: &weight_root "/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights"
 
 # for pose estimation
 POSE:
@@ -25,21 +25,13 @@ TRACKER:
   n_init: 6 # 5
   nn_budget: 100
   ## reid config
-  gaussian_mask: False # gaussian mask not use in my custom reid models
-  img_size: [256, 128] # height, width
-  ## for market1501
-  mean: [0.1736, 0.1613, 0.1606]
-  std: [0.1523, 0.1429, 0.1443]
-  ## for imagenet pretrained (use for aligned reid model)
-  # mean: [0.485, 0.456, 0.406]
-  # std: [0.229, 0.224, 0.225]
-  ## change the reid network type and it's pretrained path
-  reid_net: "siamesenet" # [wideresnet, siamesenet, align_reid]
+  dataset_name: 'mars' #[market1501, mars]
+  reid_name: "siamesenet" # [wideresnet, siamesenet, osnet_ibn_x1_0]
   model_path:
     - *weight_root
     - tracker
     - deepsort
-    - siamese_reid.pth # wide_residual_reid, siamese_reid
+    - siamese_reid_mars.trt # wide_residual_reid_market1501, siamese_reid_market1501, osnet_ibn_x1_0_reid_market1501
 
 # for action classifier
 CLASSIFIER:

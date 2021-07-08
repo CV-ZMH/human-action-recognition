@@ -1,4 +1,9 @@
 
+__pycache__
+*.trt
+*.pth
+*.onnx
+
 # IO data folders
 data
 output

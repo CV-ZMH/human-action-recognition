@@ -140,8 +140,8 @@ class Tracker:
 
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
-        # matches = matches_a
-        # unmatched_tracks = list(set(unmatched_tracks_a))
+        # matches = matches_b
+        # unmatched_tracks = list(set(unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
 
     def _initiate_track(self, detection):

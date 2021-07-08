@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-import _init_paths
+import sys
+sys.path.append('../src/lib')
 import os
 import torch
 import torch2trt
@@ -8,7 +8,7 @@ from utils.config import Config
 from pose_estimation.trtpose.trtpose import TrtPose
 
 class ExportTrt(TrtPose):
-    """Convert trtpose pytorch model to tensorrt"""
+    """Convert trtpose pytorch model to tensorrt."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -21,7 +21,7 @@ class ExportTrt(TrtPose):
         model_trt = torch2trt.torch2trt(
             self.model,
             [data],
-            fp16_mode=False,
+            fp16_mode=True,
             max_workspace_size=1<<25
         )
         folder, filename = os.path.split(self.model_path)
@@ -32,7 +32,7 @@ class ExportTrt(TrtPose):
         print('[INFO] Saved to {}'.format(output_path))
 
 def main(config, save_name=None):
-    """Convert pytorch pose model to tensorrt
+    """Convert pytorch pose model to tensorrt.
     config : must be trtpose config file. you can use 'infer_trtpose_deepsort_dnn.yaml' this also.
     save_name : save tensorrt name, default(None)
     """

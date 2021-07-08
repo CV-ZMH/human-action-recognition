@@ -23,13 +23,13 @@ def get_args():
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    default='../test_data/stand.jpg',
+                    default='/home/zmh/Desktop/HDD/Test_Videos/street_walk_1.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
                     help='just need output folder, not filename. if None, result will not save.')
     ap.add_argument('--draw_kp_numbers', action='store_true',
-                    default=True,
+                    default=False,
                     help='draw keypoints numbers of each person')
     ap.add_argument('--debug_track', action='store_true',
                     # default=True,
@@ -41,9 +41,9 @@ def get_suffix(args, cfg):
     suffix = []
     suffix.append(cfg.POSE.name)
     if args.task != 'pose':
-        suffix.extend([cfg.TRACKER.name, cfg.TRACKER.reid_net])
+        suffix.extend([cfg.TRACKER.name, cfg.TRACKER.dataset_name, cfg.TRACKER.reid_name])
         if args.task == 'action':
-            suffix.extend([cfg.CLASSIFIER.name])
+            suffix.extend([cfg.CLASSIFIER.name, 'torch'])
     return suffix
 
 
@@ -73,9 +73,9 @@ def main():
             start_pose = time.time()
             keypoints_list = pose_estimator.predict(rgb_frame)
             end_pose = time.time() - start_pose
-
+            bboxes = utils.keypoints_to_bbox(keypoints_list, rgb_frame)
             # if no keypoints, update tracked's time_since_update and it's age
-            if len(keypoints_list) == 0 and args.task != 'pose':
+            if len(bboxes) == 0 and args.task != 'pose':
                 debug_img = bgr_frame
                 tracker.increment_ages()
             else:
@@ -91,7 +91,6 @@ def main():
                 else:
                     # preprocess trtpose keypoints for tracking and action classifier
                     skeletons_list = utils.convert_to_skeletons(keypoints_list)
-                    bboxes = utils.keypoints_to_bbox(keypoints_list, rgb_frame)
 
                     # pass keypoints' bboxes to tracker
                     start_track = time.time()
