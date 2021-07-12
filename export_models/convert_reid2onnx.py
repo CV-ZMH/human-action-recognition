@@ -6,8 +6,9 @@ import onnx
 import torch
 from fire import Fire
 from PIL import Image
-
 from tracker.deepsort import tracker_utils as utils
+
+IMG_PATH = '0003C5T0011F003.jpg'
 
 def make_output_path(model_path):
     folder, filename = osp.split(model_path)
@@ -21,21 +22,19 @@ def get_input_data(data_meta, img_path, bs=10):
     input_data = tfms(image)[None]
     return input_data
 
-
 def export_onnx(
         model_path,
-        reid_net,
-        dataset,
-        img_path,
+        reid_name,
+        dataset_name,
         output_path=None,
         check=False
     ):
 
     # get input data
-    data_meta = utils.get_data_meta(dataset)
-    input_data = get_input_data(data_meta, img_path)
+    data_meta = utils.get_data_meta(dataset_name)
+    input_data = get_input_data(data_meta, IMG_PATH)
     # load pytorch model
-    model = utils.load_reid_model(reid_net, model_path, data_meta).to('cpu')
+    model = utils.load_reid_model(reid_name, model_path, data_meta).to('cpu')
     # export to onnx
     if output_path is None:
         output_path = make_output_path(model_path)
@@ -62,13 +61,12 @@ def export_onnx(
         utils.check_onnx_export(model, input_data, output_path)
 
 def test():
-    model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_reid_mars.pth'
-    reid_net = 'siamesenet'
-    dataset = 'mars'
-    img_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/0003C5T0011F003.jpg'
-    export_onnx(model_path, reid_net, dataset, img_path=img_path, check=True)
+    model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_mars.pth'
+    reid_name = 'siamesenet'
+    dataset_name = 'mars'
+    export_onnx(model_path, reid_name, dataset_name, check=True)
 
 
 if __name__ == '__main__':
-    # Fire(export_onnx)
-    test()
+    Fire(export_onnx)
+    #test()

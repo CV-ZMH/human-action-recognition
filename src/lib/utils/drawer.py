@@ -80,7 +80,7 @@ def draw_trtpose(image,
                  draw_points=True,
                  draw_numbers=False,
                  skip_from=-1,
-                 line_color=None):
+                 line_color=(0,255,0)):
     """Draw keypoints and their connections as trtpose format"""
 
     visibilities = []
@@ -102,14 +102,12 @@ def draw_trtpose(image,
     for pair_idx, pair in enumerate(limb_pairs):
         if pair[0] < skip_from or pair[1] < skip_from: continue
         if pair[0] in visibilities or pair[1] in visibilities: continue
-        if line_color:
-            cv2.line(image, centers[pair[0]], centers[pair[1]], line_color, thickness)
-        else:
-            # print(pair_idx, LR[pair_idx])
+        if isinstance(line_color, str):
             cv2.line(image, centers[pair[0]], centers[pair[1]], \
                      colors[line_color],
                      thickness)
-
+        else:
+            cv2.line(image, centers[pair[0]], centers[pair[1]], line_color, thickness)
 
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,

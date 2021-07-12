@@ -2,7 +2,7 @@ import os
 from fire import Fire
 import tensorrt as trt
 
-def onnx2trt(onnx_path, mode='fp16', batch_size=32, calib=None, save_path=None):
+def onnx2trt(onnx_path, mode='fp16', max_batch=100, calib=None, save_path=None):
     """Convert onnx model to tensorrt engine, use mode of ['fp32', 'fp16', 'int8'].
     return : trt engine
     """
@@ -15,7 +15,7 @@ def onnx2trt(onnx_path, mode='fp16', batch_size=32, calib=None, save_path=None):
 
         # allow TensorRT to use up to 1GB of GPU memory for tactic selection
         builder.max_workspace_size = 3*1 << 30
-        builder.max_batch_size = batch_size
+        builder.max_batch_size = max_batch
 
         if mode.lower() == 'int8':
             assert (builder.platform_has_fast_int8 == True), 'not support int8'
@@ -29,9 +29,9 @@ def onnx2trt(onnx_path, mode='fp16', batch_size=32, calib=None, save_path=None):
         # generate TensorRT engine optimized for the target platform
         config = builder.create_builder_config()
         profile = builder.create_optimization_profile()
-        profile.set_shape('input', (1, 3, 256, 128),
-                          (batch_size//2, 3, 256, 128),
-                          (batch_size, 3, 256, 128))
+        profile.set_shape('input', (1, 3, 256, 128), # min
+                          (max_batch//2, 3, 256, 128), # optimize
+                          (max_batch, 3, 256, 128)) # max
         config.add_optimization_profile(profile)
 
         # parse ONNX
@@ -50,16 +50,15 @@ def onnx2trt(onnx_path, mode='fp16', batch_size=32, calib=None, save_path=None):
         print(f'[INFO] Saving engine file: {save_path}')
         with open(save_path, 'wb') as f:
             f.write(engine.serialize())
-        return engine
 
 def test():
-    onnx_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_reid_mars.onnx'
+    onnx_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_mars.onnx'
     mode = 'fp16'
-    batch_size = 100
+    max_batch = 100
     calib = None
     save_path = None
-    engine = onnx2trt(onnx_path, mode, batch_size, calib, save_path)
+    onnx2trt(onnx_path, mode, max_batch, calib, save_path)
 
 if __name__ == '__main__':
-    # Fire(onnx2trt)
-    test()
+    Fire(onnx2trt)
+    # test()

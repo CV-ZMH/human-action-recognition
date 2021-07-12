@@ -11,12 +11,16 @@ import torchvision.transforms as transforms
 from trt_pose import models, coco
 from trt_pose.parse_objects import ParseObjects
 
+POSE_META = {
+    'num_parts': 18,
+    'num_links': 21,
+    'skeleton': [[16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 8], [7, 9], [8, 10], [9, 11], [2, 3], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [18, 1], [18, 6], [18, 7], [18, 12], [18, 13]]
+}
 
 class TrtPose:
     """trtpose wrapper for pose prediction"""
 
     _params = OrderedDict(
-            json='human_pose.json',
             backbone='densenet121',
             cmap_threshold=0.1,
             link_threshold=0.1,
@@ -39,8 +43,7 @@ class TrtPose:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # load humanpose json data
-        self.meta = self.load_json(self.json)
-        self.topology = coco.coco_category_to_topology(self.meta)
+        self.topology = coco.coco_category_to_topology(POSE_META)
         self.parse_objects = ParseObjects(self.topology, cmap_threshold=self.cmap_threshold, link_threshold=self.link_threshold)
 
         # load is_trt model
@@ -55,12 +58,6 @@ class TrtPose:
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
 
-    @staticmethod
-    def load_json(json_file):
-        with open(json_file, 'r') as f:
-            meta = json.load(f)
-        return meta
-
     def _load_trt_model(self, model_file):
         """load converted tensorRT model"""
 
@@ -74,8 +71,8 @@ class TrtPose:
         """load pytorch model with resnet18 encoder or densenet121"""
 
         print(f'[INFO] Loading pytorch trtpose model with "{model_file}"')
-        num_parts = len(self.meta['keypoints'])
-        num_links = len(self.meta['skeleton'])
+        num_parts = POSE_META['num_parts']
+        num_links = POSE_META['num_links']
 
         if backbone=='resnet18':
             model = models.resnet18_baseline_att(
@@ -164,6 +161,6 @@ class TrtPose:
 if __name__ == '__main__':
     size = 256
     model_path = '../../../../weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160.pth'
-    pose_estimator = TrtPose(size=size, model_path=model_path)
+    pose_estimator = TrtPose(size, model_path, 0, 8)
     x = np.ones((size, size, 3), dtype=np.uint8)
     all_keypoints = pose_estimator.predict(x)

@@ -1,13 +1,15 @@
 # Simple Real Time Multi Person Action Recognition  
 
 # News
-:boom:  Added trained weights of [**siamesenet**](https://github.com/abhyantrika/nanonets_object_tracking/blob/master/siamese_net.py) and [**aligned reID**](https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch) networks and training script. They are used in cosine metric learnings of deep sort pipeline.
+:boom: Added tensorrt conversion script for reid models.
+
+:boom: Added reid models which are trained on mars and market1501 datasets.
+
+:boom: Added trained weight of [**siamesenet**](https://github.com/abhyantrika/nanonets_object_tracking/blob/master/siamese_net.py) networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
 
-:boom: IoU matching step required for tracked bboxes ID and keypoints' bboxes index is directly replaced after the process of deepsort matching cascade.
-
-:boom: Fixed and cleaned for deepsort bbox input format as *xmin, ymin, xmax, ymax*.
+:boom: Fixed deepsort bbox input format as *xmin, ymin, xmax, ymax*.
 
 :boom: Added current frame details and config parameters in left side of the display.
 
@@ -42,8 +44,8 @@ This is the 3 steps multi-person action recognition pipeline using
 
 You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
 
-Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also. 
-:exclamation: Since the original dataset is only extracted 1 person and 1 view point from camera, the action classification result isn't good enough in other tested video (i.e., hard to recognize of other person's video). 
+Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
+:exclamation: Since the original dataset is only extracted 1 person and 1 view point from camera, the action classification result isn't good enough in other tested video (i.e., hard to recognize of other person's video).
 
 
 > Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
@@ -64,7 +66,7 @@ Action classifier is used from [this repo](https://github.com/felixchenfy/Realti
  <tr>
     <td align="center"><font size="1">Street scene demo<font></td>
     <td align="center"><font size="1">Street scene debug demo<font></td>   
- </tr> 
+ </tr>
  <tr>
     <td><img width="448" height="256" src="assets/street_walk.gif"></td>
     <td><img width="448" height="256" src="assets/street_walk_debug.gif"></td>
@@ -72,25 +74,31 @@ Action classifier is used from [this repo](https://github.com/felixchenfy/Realti
  <tr>
     <td align="center"><font size="1">Street walk demo<font></td>
     <td align="center"><font size="1">Street walk debug demo<font></td>   
- </tr> 
-</table> 
-      
+ </tr>
+</table>
+
 
 
 # Inference Speed
 Tested PC specification
 
 - **OS**: Ubuntu 18.04
-- **CPU**: i7-8750H @ 4.100GHz
+- **CPU**: Ryzen 5 3600 @3.766GHz
 - **GPU**:  RTX 2060
 - **CUDA**: 10.2
 - **TensorRT**: 7.1.3.4
 
-| Pipeline Step | Step's Input Size (H, W) | FPS|
-| -  | - | - |
-| trtpose  | (256x256) | 25  |
-| trtpose + deepsort | (256x256) + (256x128) | 18 |
-| trtpose + deepsort + dnn | (256x256) + (256x128) + (-) | 15 |
+:exclamation: Below table is based on a single person video. For multi person testing, the result may vary.
+
+| Pipeline Step |  Model  | Step's Model Input Size (H, W) | `Pytorch` FPS| `TensorRT` FPS|
+| -  | - | - | - | - |
+| Pose Estimation  | densenet121 |(256x256) | 25 fps  | 38 fps |
+||
+| Pose Estimation + Tracking  | densenet121 + deepsort `siamese` reid | (256x256) + (256x128) | 22 fps | 34 fps
+| Pose Estimation + Tracking  | densenet121 + deepsort `wideresnet` reid | (256x256) + (256x128) | 22 fps | 31 fps
+||
+| Pose Estimation + Tracking + Action | densenet121 + deepsort `siamese` reid + dnn | (256x256) + (256x128) + (--) | 21 fps | 33 fps |
+| Pose Estimation + Tracking + Action | densenet121 + deepsort `wideresnet` reid + dnn | (256x256) + (256x128) + (--) | 21 fps | 30 fps|
 
 
 # Installation
@@ -106,6 +114,7 @@ Here is required packages for this project and you need to install each of these
 2. [Cuda-10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=deblocal) and [Cudnn 8.0.2](https://developer.nvidia.com/rdp/cudnn-archive)
 3. [Pytorch 1.7.1](https://pytorch.org/get-started/previous-versions/) and [Torchvision 0.8.2](https://pytorch.org/get-started/previous-versions/)
 4. [TensorRT 7.1.3](https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-723/install-guide/index.html)
+5. [ONNX 1.9.0](https://pypi.org/project/onnx/)
 
 ## Step 2 - Install [torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt)
 ```bash
@@ -133,29 +142,56 @@ pip install -r requirements.txt
 ## Step 1 - Download the Pretrained Models
 Action Classifier Pretrained models are already uploaded in the path `weights/classifier/dnn`.
 - Download the pretrained weight files to run the demo.
-      
-| Model | Weight |
-|---|---|
-| Trt_Pose (*densenet121*) | [weight](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
-| Deepsort (*original reid*)| [weight](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
-| Deepsort (*siamese reid*)| [weight](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
-| Deepsort (*align reid*)| [weight](https://drive.google.com/file/d/1WKv1QJFuWNVh_GLzQ_Ssu9XXSNR2s2b5/view?usp=sharing)|
+
+| Model Type | Name | Trained Dataset |  Weight |
+|---|---|---|---|
+| Pose Estimation | trtpose | COCO       |[densenet121](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
+|
+| Tracking        | deepsort reid| Market1501 | [wide_resnet](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
+| Tracking        | deepsort reid| Market1501 | [siamese_net](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
+| Tracking        | deepsort reid| Mars | [wide_resnet](https://drive.google.com/file/d/1lRvkNsJrR4qj50JHsKStEbaSuEXU3u1-/view?usp=sharing)|
+| Tracking        | deepsort reid| Mars | [siamese_net](https://drive.google.com/file/d/1eyj5zKoLjnHqfSIz2eJjXq0r9Sw7k0R0/view?usp=sharing)|
+
 
 - Then put them to these folder
     - *deepsort* weight to `weights/tracker/deepsort/`
     - *trt_pose* weight to `weights/pose_estimation/trtpose`.
 
-## Step 2 - Convert TrTPose to TensorRT (Optional)
+## Step 2 - TensorRT Conversion (Optional)
 
-If you don't have installed tensorrt on your system, just skip this step. You just need to set trtpose pytorch model path of the [model path](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L9) in the config.
+If you don't have installed tensorrt on your system, just skip this step. You just need to set pytorch model weights of the corresponding [model path](configs/infer_trtpose_deepsort_dnn.yaml) in this config file.
 
-Run the below command to convert  TrtPose pytorch weight to tensorrt.
+Convert **trtpose model**
 ```bash
-# check the IO weight file in configs/trtpose.yaml
-cd src
-python convert_tensorrt.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
+# check the I/O weight file in configs/trtpose.yaml
+cd export_models
+python convert_trtpose.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
 ```
 :bangbang:  Original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L6) parameter in [`configs/infer_trtpose_deepsort_dnn.yaml`](configs/infer_trtpose_deepsort_dnn.yaml) file.
+
+Convert **Deepsort reid model**, pytorch >> onnx >> tensorRT
+```basg
+cd export_models
+#1. torch to onnx
+python convert_reid2onnx.py \
+--model_path <your reid model path> \
+--reid_name <siamesenet/wideresnet> \
+--dataset_name <market1501/mars> \
+--check
+
+#2. onnx to tensorRT
+python convert_reid2trt.py \
+--onnx_path <your onnx model path> \
+--mode fp16 \
+--max_batch 100
+
+#3. check your tensorrt converted model with pytorch model
+python test_trt_inference.py \
+--trt_model_path <your tensorrt model path> \
+--torch_model_path <your pytorch model path> \
+--reid_name <siamesenet/wideresnet> \
+--dataset_name <market1501/mars> \
+```
 
 ## Step 3 - Run Demo.py
 
@@ -171,7 +207,7 @@ Arguments list of `Demo.py`
  [confiigs/infer_trtpose_deepsort_dnn.yaml](configs/infer_trtpose_deepsort_dnn.yaml) file.
 
 Examples:
--  To use different reid network, [`reid_net`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L37) and it's [`model_path`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L38) in [`TRACKER`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L20) node.
+-  To use different reid network, [`reid_name`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L37) and it's [`model_path`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L38) in [`TRACKER`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L20) node.
 - Set also [`model_path`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L13) of trtpose  in [`POSE`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L4) node.
 - You can also tune other parameters of [`TRACKER`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L20) node and [`POSE`](https://github.com/CV-ZMH/human-action-recognition/blob/6bdf3a541eb6adc618c67e4e6df7d6fdaddffb1b/configs/infer_trtpose_deepsort_dnn.yaml#L4) node for better tracking and action recognition result.
 
@@ -218,10 +254,10 @@ cd src && bash ./train_trtpose_dnn_action.sh
 
 ## Train reID Model for DeepSort Tracking
 To train different reid network for cosine metric learning used in deepsort:
-- Download the reid dataset [Market1501](https://www.kaggle.com/pengcw1/market-1501/data)
-- Prepare dataset with this command.
+- Download the reid dataset [Mars](https://www.kaggle.com/twoboysandhats/mars-motion-analysis-and-reidentification-set)
+- Prepare `mars` dataset with this command. This will split train/val from mars bbox-train folder and calculate mean & std over the train set. Use this mean & std for dataset normalization.
 ```bash
-cd src && python prepare_market1501.py --root (your dataset root)
+cd src && python prepare_mars.py --root <your dataset root> --train_percent 0.8 --bs 256
 ```
 - Modify the [`tune_params`](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/train_reid.yaml#L26) for multiple runs to find hyper parameter search as your need.
 
@@ -239,9 +275,9 @@ cd src && python train_reid.py --config ../configs/train_reid.yaml
 
 # TODO  
 - [x] Add FPS of current frame.
-- [x] Fix ID matching after matching cascade in DeepSort
 - [x] Add different reid network used in DeepSort
+- [x] Add tensorrt for reid model
 - [ ] Add open_pifpaf pose estimation
-- [ ] Add norfair tracker
+- [ ] Add centertrack tracker
 - [ ] Add other action recognition network.
 - [ ] Train on different datasets, loss strategies, reid networks for deepsort tracking.

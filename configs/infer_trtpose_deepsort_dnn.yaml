@@ -5,7 +5,6 @@ POSE:
   name: 'trtpose'
   size: 256 # height, width
   backbone: densenet121
-  json: lib/pose_estimation/trtpose/human_pose.json
   model_path:
     - *weight_root
     - pose_estimation
@@ -31,7 +30,7 @@ TRACKER:
     - *weight_root
     - tracker
     - deepsort
-    - siamese_reid_mars.trt # wide_residual_reid_market1501, siamese_reid_market1501, osnet_ibn_x1_0_reid_market1501
+    - siamese_mars.trt # wide_residual_market1501, siamese_market1501
 
 # for action classifier
 CLASSIFIER:

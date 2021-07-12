@@ -1,3 +1,4 @@
+import _init_paths
 import os
 import os.path as osp
 import shutil
@@ -41,7 +42,7 @@ def split_train_val(root, train_percent=0.8):
     return train_dir, val_dir
 
 
-def main(root, train_percent, bs):
+def main(root, train_percent, bs=128):
     """Create train and val dataset for Mars dataset. Then, compute mean and std
     on train dataset folder.
     Args:
@@ -55,7 +56,6 @@ def main(root, train_percent, bs):
         transform=torchvision.transforms.ToTensor()
     )
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=bs)
-
     mean, std = compute_mean_std(train_loader)
     print('\n'+'-'*50)
     print('Mean: {}'.format(mean))
@@ -64,4 +64,3 @@ def main(root, train_percent, bs):
 
 if __name__ == '__main__':
     Fire(main)
-

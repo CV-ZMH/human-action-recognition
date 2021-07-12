@@ -4,15 +4,15 @@ import os
 import time
 
 import torch
-torch.tensor(1, device='cuda') # temp fix for pycuda gpu allocation conflict
+torch.tensor(1, device='cuda') # temp fix for pycuda gpu allocation conflict with torch tensor
 import numpy as np
 import pycuda.driver as cuda
 import pycuda.autoinit
 import tensorrt as trt
+from fire import Fire
 
 from PIL import Image
 from torchvision import transforms
-
 from tracker.deepsort import tracker_utils as utils
 
 def np_transform(image, data_meta):
@@ -111,16 +111,7 @@ class FeatureExtractor:
         return features
 
 
-def test():
-    trt_model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_reid_mars.trt'
-    torch_model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_reid_mars.pth'
-
-    img_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/0003C5T0011F003.jpg'
-    reid_name = 'siamesenet'
-    dataset_name = 'mars'
-
-    # import cv2
-    # input_data = cv2.imread(img_path)[...,::-1][None]
+def test_trt(trt_model_path, torch_model_path, reid_name, dataset_name):
 
     torch_extractor = FeatureExtractor(torch_model_path, reid_name, dataset_name)
     trt_extractor = FeatureExtractor(trt_model_path, reid_name, dataset_name)
@@ -143,6 +134,13 @@ def test():
     _ = [utils.test_near(a, b) for a, b in zip(trt_features, torch_features)]
     print('Test Passed!')
 
+def test():
+    trt_model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_market1501.trt'
+    torch_model_path = '/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights/tracker/deepsort/siamese_market1501.pth'
+    reid_name = 'siamesenet'
+    dataset_name = 'market1501'
+    test_trt(trt_model_path, torch_model_path, reid_name, dataset_name)
+
 if __name__ == "__main__":
-    # Fire(fire)
-    input_data = test()
+    Fire(test_trt)
+    # test()

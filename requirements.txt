@@ -10,3 +10,4 @@ pyyaml
 rich
 termcolor
 fire
+onnx==1.9.0

@@ -49,3 +49,4 @@ def main(config, save_name=None):
 
 if __name__ == '__main__':
     Fire(main)
+    # main('../configs/infer_trtpose_deepsort_dnn.yaml')
