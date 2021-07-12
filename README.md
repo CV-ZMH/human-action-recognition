@@ -37,7 +37,7 @@ Table of Contents
 ---
 
 # Overview
-This is the 3 steps multi-person action recognition pipeline using
+This is the 3 steps multi-person action recognition pipeline. But it achieves real time performance with 33 FPS for whole action recognition pipeline.
 1. pose estimation with [trtpose](https://github.com/NVIDIA-AI-IOT/trt_pose)
 2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
 3. action classifier with [dnn](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram)
