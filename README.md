@@ -42,11 +42,13 @@ This is the 3 steps multi-person action recognition pipeline using
 2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
 3. action classifier with [dnn](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram)
 
+> Overview of Action Recognition Pipeline  
+![](assets/Program_flow.png)
+
 You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
 
 Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
-:exclamation: Since the original dataset is only extracted 1 person and 1 view point from camera, the action classification result isn't good enough in other tested video (i.e., hard to recognize of other person's video).
-
+:exclamation: Since this action dataset is captured from 1 view point and acted by 1 person, the action classifier result is not so good in different view points.
 
 > Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
 
@@ -111,7 +113,7 @@ Check this [installation guide](https://github.com/CV-ZMH/Installation-Notes-for
 
 Here is required packages for this project and you need to install each of these.
 1. Nvidia-driver 450
-2. [Cuda-10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=deblocal) and [Cudnn 8.0.2](https://developer.nvidia.com/rdp/cudnn-archive)
+2. [Cuda-10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=deblocal) and [Cudnn 8.0.5](https://developer.nvidia.com/rdp/cudnn-archive)
 3. [Pytorch 1.7.1](https://pytorch.org/get-started/previous-versions/) and [Torchvision 0.8.2](https://pytorch.org/get-started/previous-versions/)
 4. [TensorRT 7.1.3](https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-723/install-guide/index.html)
 5. [ONNX 1.9.0](https://pypi.org/project/onnx/)
