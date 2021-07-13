@@ -25,8 +25,9 @@ Table of Contents
    * [Step 2 - Install <a href="https://github.com/NVIDIA-AI-IOT/torch2trt">torch2trt</a>](#step-2---install-torch2trt)
    * [Step 3 - Install trt_pose](#step-3---install-trt_pose)
 * [Run Quick Demo](#run-quick-demo)
-   * [Step 1 - Download the Pretrained Models](#step-1---download-the-pretrained-models)
-   * [Step 2 - Convert TrTPose to TensorRT (Optional)](#step-2---convert-trtpose-to-tensorrt-optional)
+   * [Step 1 - Download the Pretrained Models](#step-1---download-the-pretrained-models)## Step 2 - TensorRT Conversion (Optional)
+
+   * [Step 2 - TensorRT Conversion (Optional)](#step-2---tensorrt-conversion-optional)
    * [Step 3 - Run Demo.py](#step-3---run-demopy)
 * [Training](#training)
    * [Train Action Classifier Model](#train-action-classifier-model)
@@ -148,7 +149,7 @@ Action Classifier Pretrained models are already uploaded in the path `weights/cl
 | Model Type | Name | Trained Dataset |  Weight |
 |---|---|---|---|
 | Pose Estimation | trtpose | COCO       |[densenet121](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
-|
+|||||
 | Tracking        | deepsort reid| Market1501 | [wide_resnet](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
 | Tracking        | deepsort reid| Market1501 | [siamese_net](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
 | Tracking        | deepsort reid| Mars | [wide_resnet](https://drive.google.com/file/d/1lRvkNsJrR4qj50JHsKStEbaSuEXU3u1-/view?usp=sharing)|
