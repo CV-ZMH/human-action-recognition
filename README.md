@@ -25,7 +25,7 @@ Table of Contents
    * [Step 2 - Install <a href="https://github.com/NVIDIA-AI-IOT/torch2trt">torch2trt</a>](#step-2---install-torch2trt)
    * [Step 3 - Install trt_pose](#step-3---install-trt_pose)
 * [Run Quick Demo](#run-quick-demo)
-   * [Step 1 - Download the Pretrained Models](#step-1---download-the-pretrained-models)## Step 2 - TensorRT Conversion (Optional)
+   * [Step 1 - Download the Pretrained Models](#step-1---download-the-pretrained-models)
 
    * [Step 2 - TensorRT Conversion (Optional)](#step-2---tensorrt-conversion-optional)
    * [Step 3 - Run Demo.py](#step-3---run-demopy)
