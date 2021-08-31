@@ -9,9 +9,6 @@ from .commons import *
 
 def keypoints_to_skeletons_list(all_keypoints):
     """Get skeleton data of (x, y) from humans."""
-
-    # if scale_h is None:
-    #     scale_h = self._scale_h
     skeletons_list = []
     NaN = 0
     for keypoints in all_keypoints:
@@ -23,8 +20,7 @@ def keypoints_to_skeletons_list(all_keypoints):
     return skeletons_list
 
 def trtpose_to_openpose(keypoints_list):
-    """Change trtpose skeleton to openpose format"""
-
+    """Change trtpose skeleton to openpose format."""
     new_keypoints = keypoints_list.copy()
     if new_keypoints.tolist():
         for idx1, idx2 in openpose_trtpose_match_idx:
@@ -51,7 +47,6 @@ def convert_to_skeletons(keypoints_list):
 
 def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
     """expand bbox for containing more background"""
-
     width = xmax - xmin
     height = ymax - ymin
     ratio = 0.1   # expand ratio
@@ -112,8 +107,7 @@ def _get_files(p, fs, extensions=None):
     return res
 
 def get_files(path, extensions=None, recurse=False, include=None):
-    """get all files path
-    """
+    """get all files path"""
     path = Path(path)
     extensions = setify(extensions) if isinstance(extensions, str) \
         else setify(e.lower() for e in extensions)

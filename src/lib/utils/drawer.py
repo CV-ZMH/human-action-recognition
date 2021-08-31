@@ -103,9 +103,7 @@ def draw_trtpose(image,
         if pair[0] < skip_from or pair[1] < skip_from: continue
         if pair[0] in visibilities or pair[1] in visibilities: continue
         if isinstance(line_color, str):
-            cv2.line(image, centers[pair[0]], centers[pair[1]], \
-                     colors[line_color],
-                     thickness)
+            cv2.line(image, centers[pair[0]], centers[pair[1]], colors[line_color], thickness)
         else:
             cv2.line(image, centers[pair[0]], centers[pair[1]], line_color, thickness)
 

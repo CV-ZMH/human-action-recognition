@@ -11,10 +11,8 @@ from utils.config import Config
 from utils.video import Video
 from utils import utils, drawer
 
-
 def get_args():
     ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # configs
     ap.add_argument('--task', choices=['pose', 'track', 'action'], default='action',
                     help='inference task for pose estimation, action recognition or tracking')
 
@@ -23,7 +21,7 @@ def get_args():
                     help='all inference configs for full action recognition pipeline.')
     # inference source
     ap.add_argument('--source',
-                    default='/home/zmh/Desktop/HDD/Test_Videos/street_walk_1.mp4',
+                    # default='/home/zmh/Desktop/HDD/Test_Videos/fun_theory_2.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
@@ -103,7 +101,7 @@ def main():
                             tracked_keypoints = {
                                 track["track_id"]: skeletons_list[track["detection_index"]]
                                 for track in tracks
-                                }
+                            }
                             actions = action_classifier.classify(tracked_keypoints)
 
                         # draw keypoints, tracks, actions on current frame
@@ -120,15 +118,15 @@ def main():
             final_img = drawer.draw_frame_info(
                 bgr_frame,
                 color='green',
-                mode=args.task,
-                FPS=f'{video.fps:.3f}',
+                Mode=args.task,
                 Frame=f'{video.frame_cnt}/{video.total_frames}',
-                MaxDist=cfg.TRACKER.max_dist,
-                MaxIoU=cfg.TRACKER.max_iou_distance,
-                # TotalSpeed='{:.3f}s'.format(end_pipeline),
+                maxDist=cfg.TRACKER.max_dist,
+                maxIoU=cfg.TRACKER.max_iou_distance,
+                Speed='{:.1f}ms'.format(end_pipeline*1000),
+                FPS=f'{video.fps:.3f}',
                 # TotalTracks=len(tracks) if len(keypoints_list) > 0 else 0,
                 # TrackSpeed='{:.3f}s'.format(end_track) if len(keypoints_list)>0 else 0,
-                )
+            )
 
             if video.frame_cnt == 1 and args.save_folder:
                 output_suffix = get_suffix(args, cfg)
@@ -136,7 +134,7 @@ def main():
                     args.save_folder,
                     suffix=output_suffix
                     )
-                writer = video.get_writer(final_img, output_path)
+                writer = video.get_writer(final_img, output_path, fps=30)
                 if args.debug_track and args.task != 'pose':
                     debug_output_path = output_path[:-4] + '_debug.avi'
                     debug_writer = video.get_writer(debug_img, debug_output_path)
@@ -165,7 +163,6 @@ def main():
 
     finally:
         video.stop()
-
 
 if __name__ == '__main__':
     main()

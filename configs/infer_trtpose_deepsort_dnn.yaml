@@ -1,4 +1,4 @@
-weight_root: &weight_root "/home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights"
+weight_root: &weight_root /home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights
 
 # for pose estimation
 POSE:
@@ -25,7 +25,7 @@ TRACKER:
   nn_budget: 100
   ## reid config
   dataset_name: 'mars' #[market1501, mars]
-  reid_name: "siamesenet" # [wideresnet, siamesenet, osnet_ibn_x1_0]
+  reid_name: "wideresnet" # [wideresnet, siamesenet]
   model_path:
     - *weight_root
     - tracker

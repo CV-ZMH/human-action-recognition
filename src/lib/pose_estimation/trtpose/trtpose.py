@@ -14,8 +14,13 @@ from trt_pose.parse_objects import ParseObjects
 POSE_META = {
     'num_parts': 18,
     'num_links': 21,
-    'skeleton': [[16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 8], [7, 9], [8, 10], [9, 11], [2, 3], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [18, 1], [18, 6], [18, 7], [18, 12], [18, 13]]
+    'skeleton': [
+        [16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 8], [7, 9],
+        [8, 10], [9, 11], [2, 3], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6],
+        [5, 7], [18, 1], [18, 6], [18, 7], [18, 12], [18, 13]
+    ]
 }
+
 
 class TrtPose:
     """trtpose wrapper for pose prediction"""
@@ -110,10 +115,7 @@ class TrtPose:
             image (np.ndarray[r,g,b]): rgb input image.
         return:
             keypoints_list (np.ndarray): predicted persons' keypoints list
-        """
-
-        img_h, img_w = image.shape[:2]
-        self._scale_h = 1.0 * img_h / img_w
+        """ 
         pil_img, tensor_img = self._preprocess(image)
         # print(tensor_img.shape)
         cmap, paf = self.model(tensor_img)
