@@ -5,7 +5,7 @@
 
 :boom: Added reid models which are trained on mars and market1501 datasets.
 
-:boom: Added trained weight of [**siamesenet**](https://github.com/abhyantrika/nanonets_object_tracking/blob/master/siamese_net.py) networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
+:boom: Added trained weight of **siamesenet** networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
 
@@ -26,7 +26,8 @@ Table of Contents
    * [Step 3 - Install trt_pose](#step-3---install-trt_pose)
 * [Run Quick Demo](#run-quick-demo)
    * [Step 1 - Download the Pretrained Models](#step-1---download-the-pretrained-models)
-   * [Step 2 - Convert TrTPose to TensorRT (Optional)](#step-2---convert-trtpose-to-tensorrt-optional)
+
+   * [Step 2 - TensorRT Conversion (Optional)](#step-2---tensorrt-conversion-optional)
    * [Step 3 - Run Demo.py](#step-3---run-demopy)
 * [Training](#training)
    * [Train Action Classifier Model](#train-action-classifier-model)
@@ -37,7 +38,7 @@ Table of Contents
 ---
 
 # Overview
-This is the 3 steps multi-person action recognition pipeline using
+This is the 3 steps multi-person action recognition pipeline. But it achieves real time performance with 33 FPS for whole action recognition pipeline with 1 person video. The steps include:
 1. pose estimation with [trtpose](https://github.com/NVIDIA-AI-IOT/trt_pose)
 2. people tracking with [deepsort](https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch)
 3. action classifier with [dnn](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram)
@@ -148,7 +149,7 @@ Action Classifier Pretrained models are already uploaded in the path `weights/cl
 | Model Type | Name | Trained Dataset |  Weight |
 |---|---|---|---|
 | Pose Estimation | trtpose | COCO       |[densenet121](https://drive.google.com/file/d/1De2VNUArwYbP_aP6wYgDJfPInG0sRYca/view?usp=sharing) |
-|
+|||||
 | Tracking        | deepsort reid| Market1501 | [wide_resnet](https://drive.google.com/file/d/1xw7Sv4KhrzXMQVVQ6Pc9QeH4QDpxBfv_/view?usp=sharing)|
 | Tracking        | deepsort reid| Market1501 | [siamese_net](https://drive.google.com/file/d/11OmfZqnnG4UBOzr05LEKvKmTDF5MOf2H/view?usp=sharing)|
 | Tracking        | deepsort reid| Mars | [wide_resnet](https://drive.google.com/file/d/1lRvkNsJrR4qj50JHsKStEbaSuEXU3u1-/view?usp=sharing)|
@@ -167,7 +168,7 @@ Convert **trtpose model**
 ```bash
 # check the I/O weight file in configs/trtpose.yaml
 cd export_models
-python convert_trtpose.py --config_file ../configs/infer_trtpose_deepsort_dnn.yaml
+python convert_trtpose.py --config ../configs/infer_trtpose_deepsort_dnn.yaml
 ```
 :bangbang:  Original **densenet121_trtpose** model is trained with **256** input size. So, if you want to convert tensorrt model with bigger input size (like 512), you need to change [size](https://github.com/CV-ZMH/human_activity_recognition/blob/ad2f8adfbd30e1ae1ea3b964a2f144ce757d944a/configs/infer_trtpose_deepsort_dnn.yaml#L6) parameter in [`configs/infer_trtpose_deepsort_dnn.yaml`](configs/infer_trtpose_deepsort_dnn.yaml) file.
 
