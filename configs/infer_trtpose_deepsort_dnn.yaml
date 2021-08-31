@@ -9,10 +9,10 @@ POSE:
     - *weight_root
     - pose_estimation
     - trtpose
-    - densenet121_baseline_att_256x256_B_epoch_160_256x256.trt
+    - densenet121_baseline_att_256x256_B_epoch_160_256x256.trt # change if you convert tensorrt model
   ## below settings are needed to filter bad(fewer) person keypoints
-  min_total_joints: 8
-  min_leg_joints: 3
+  min_total_joints: 5
+  min_leg_joints: 1
   include_head: True
 
 # for Tracker
@@ -38,6 +38,7 @@ CLASSIFIER:
   name: "dnn"
   classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
   window_size: 5 # 5, 8
+  threshold: 0.5
   model_path:
      - *weight_root
      - classifier

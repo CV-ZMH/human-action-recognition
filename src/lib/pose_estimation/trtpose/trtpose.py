@@ -7,9 +7,11 @@ import torch2trt
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
-
 from trt_pose import models, coco
 from trt_pose.parse_objects import ParseObjects
+
+from utils.annotation import Annotation
+
 
 POSE_META = {
     'num_parts': 18,
@@ -109,43 +111,63 @@ class TrtPose:
         return image, tensor
 
     @torch.no_grad()
-    def predict(self, image):
+    def predict(self, image, get_bbox=False):
         """predict pose estimation on rgb image
         args:
             image (np.ndarray[r,g,b]): rgb input image.
         return:
-            keypoints_list (np.ndarray): predicted persons' keypoints list
-        """ 
+            predictions (list): list of annotation object with only good person keypoints
+        """
+        self.img_h, self.img_w = image.shape[:2]
         pil_img, tensor_img = self._preprocess(image)
-        # print(tensor_img.shape)
+        #print(tensor_img.shape)
         cmap, paf = self.model(tensor_img)
-        cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
+        cmap, paf = cmap.cpu(), paf.cpu()
         counts, objects, peaks = self.parse_objects(cmap, paf) # cmap threhold=0.15, link_threshold=0.15
-        keypoints_list = self.get_keypoints(objects, counts, peaks)
-        keypoints_list = self.remove_persons_with_few_joints(keypoints_list)
-        # print('[INFO] Numbers of person detected : {} '.format(counts.shape[0]))
-        return keypoints_list
+        predictions = self.get_keypoints(objects, counts, peaks, get_bbox=get_bbox)
+        return predictions
 
-    def remove_persons_with_few_joints(self, all_keypoints):
-        """Filter for bad(few) skeletons person before sending to the tracker"""
+    def get_bbox_from_keypoints(self, keypoints):
+        def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
+            """expand bbox for containing more background"""
+            width = xmax - xmin
+            height = ymax - ymin
+            ratio = 0.1   # expand ratio
+            new_xmin = np.clip(xmin - ratio * width, 0, img_width)
+            new_xmax = np.clip(xmax + ratio * width, 0, img_width)
+            new_ymin = np.clip(ymin - ratio * height, 0, img_height)
+            new_ymax = np.clip(ymax + ratio * height, 0, img_height)
+            new_width = new_xmax - new_xmin
+            new_height = new_ymax - new_ymin
+            return [new_xmin, new_ymin, new_width, new_height]
 
-        good_keypoints = []
-        for keypoints in all_keypoints:
+        keypoints = np.where(keypoints[:, 1:] !=0, keypoints[:, 1:], np.nan)
+        keypoints[:, 0] *= self.img_w
+        keypoints[:, 1] *= self.img_h
+        xmin = np.nanmin(keypoints[:,0])
+        ymin = np.nanmin(keypoints[:,1])
+        xmax = np.nanmax(keypoints[:,0])
+        ymax = np.nanmax(keypoints[:,1])
+        bbox = expand_bbox(xmin, xmax, ymin, ymax, self.img_w, self.img_h)
+        # discard bbox with width and height == 0
+        if bbox[2] < 1 or bbox[3] < 1 :
+            return None
+        return bbox
+
+    def get_keypoints(self, humans, counts, peaks, get_bbox=False):
+        """Get all persons keypoint"""
+        def is_good_person_keypoints(keypoints):
             # include head point or not
             total_keypoints = keypoints[5:, 1:] if not self.include_head else keypoints[:, 1:]
             num_valid_joints = sum(total_keypoints!=0)[0] # number of valid joints
             num_leg_joints = sum(total_keypoints[-7:-1]!=0)[0] # number of joints for legs
-
             if num_valid_joints >= self.min_total_joints and num_leg_joints >= self.min_leg_joints:
-                good_keypoints.append(keypoints)
-        return np.array(good_keypoints)
+                return True
+            return False
 
-    @staticmethod
-    def get_keypoints(humans, counts, peaks):
-        """Get all persons keypoint"""
-
-        all_keypoints = np.zeros((counts, 18, 3), dtype=np.float64) #  counts contain num_persons
+        predictions = []
         for count in range(counts):
+            keypoints = np.zeros((18, 3), dtype=np.float64)
             human = humans[0][count]
             C = human.shape[0]
             for j in range(C):
@@ -153,16 +175,13 @@ class TrtPose:
                 if k >= 0:
                     peak = peaks[0][j][k]
                     peak = (j, float(peak[1]), float(peak[0]))
-                    all_keypoints[count, j] = peak
                 else:
                     peak = (j, 0., 0.)
-                    all_keypoints[count, j] = peak
-        return all_keypoints
+                keypoints[j] = peak
+            if is_good_person_keypoints(keypoints):
+                ann = Annotation(keypoints)
+                if get_bbox:
+                    ann.bbox = self.get_bbox_from_keypoints(ann.keypoints)
+                predictions.append(ann)
 
-
-if __name__ == '__main__':
-    size = 256
-    model_path = '../../../../weights/pose_estimation/trtpose/densenet121_baseline_att_256x256_B_epoch_160.pth'
-    pose_estimator = TrtPose(size, model_path, 0, 8)
-    x = np.ones((size, size, 3), dtype=np.uint8)
-    all_keypoints = pose_estimator.predict(x)
+        return predictions

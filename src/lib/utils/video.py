@@ -26,19 +26,19 @@ def get_terminal_size(default: Tuple[int, int] = (80, 24)) -> Tuple[int, int]:
 
 
 class Video:
-    def __init__(self, source: str):
-        self.source = source
+    def __init__(self, src: str):
+        self.src = src
         is_webcam = lambda x: isinstance(x, int)
-        self.display = 'webcam' if is_webcam(source) \
-            else osp.basename(source)
+        self.display = 'webcam' if is_webcam(src) \
+            else osp.basename(src)
 
         # Read Input Video
-        self.video_capture = cv2.VideoCapture(source)
+        self.video_capture = cv2.VideoCapture(src)
         if not self.video_capture.isOpened:
             self._fail(
-                f"[bold red]Error:[/bold red] '{self.source}' does not seem to be a video file supported by OpenCV. If the video file is not the problem, please check that your OpenCV installation is working correctly."
+                f"[bold red]Error:[/bold red] '{self.src}' does not seem to be a video file supported by OpenCV. If the video file is not the problem, please check that your OpenCV installation is working correctly."
                 )
-        self.total_frames = 0 if is_webcam(source) \
+        self.total_frames = 0 if is_webcam(src) \
             else int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
         self.frame_cnt = 0
 
@@ -46,18 +46,17 @@ class Video:
         # Setup progressbar
         if self.display:
             description += f" | {self.display}"
+            
         progress_bar_fields: List[Union[str, ProgressColumn]] = [
             "[progress.description]{task.description}",
             BarColumn(),
             "[yellow]{task.fields[process_fps]:.2f}fps[/yellow]",
         ]
-
         progress_bar_fields.insert(
             2, "[progress.percentage]{task.percentage:>3.0f}%"
         )
         progress_bar_fields.insert(
-            3,
-            TimeRemainingColumn(),
+            3, TimeRemainingColumn(),
         )
         self.progress_bar = Progress(
             *progress_bar_fields,
@@ -68,7 +67,7 @@ class Video:
         self.task = self.progress_bar.add_task(
             self.abbreviate_description(description),
             total=self.total_frames,
-            start=self.source,
+            start=self.src,
             process_fps=0,
         )
 
@@ -79,17 +78,18 @@ class Video:
             # Iterate over video
             while True:
                 self.frame_cnt += 1
-                ret, frame = self.video_capture.read()
-                if ret is False or frame is None:
+                ret, img = self.video_capture.read()
+                if ret is False or img is None:
                     break
                 self.fps = self.frame_cnt / (time.time() - start)
                 progress_bar.update(
                     self.task, advance=1, refresh=True, process_fps=self.fps
                 )
-                yield frame
+                yield img
             self.stop()
 
     def stop(self):
+        self.frame_cnt = 0
         self.video_capture.release()
         cv2.destroyAllWindows()
 
@@ -97,7 +97,7 @@ class Video:
         print(msg)
         exit()
 
-    def show(self, frame: np.array, winname: str='show',downsample_ratio: float = 1.0) -> int:
+    def show(self, frame: np.array, winname: str='show',downsample_ratio: float = 1.0):
         # Resize to lower resolution for faster streaming over slow connections
         if self.frame_cnt == 1:
             cv2.namedWindow(winname, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
@@ -115,17 +115,21 @@ class Video:
         cv2.imshow(winname, frame)
         return cv2.waitKey(1)
 
-    def get_writer(self, frame: np.array, output_path: str, fps: Optional[int]=20) -> int:
+    def get_writer(self, frame, output_path, fps=20):
+        output_path = osp.join(
+            output_path, osp.splitext(osp.basename(self.src))[0]+'.avi') \
+            if output_path[-4:] != '.avi' else output_path
         fourcc = cv2.VideoWriter_fourcc(*"XVID")
         output_size = (frame.shape[1], frame.shape[0]) # OpenCV format is (width, height)
         writer = cv2.VideoWriter(output_path, fourcc, fps, output_size)
+        print(f'[INFO] Writing output to {output_path}')
         return writer
 
     def get_output_file_path(self, output_folder, suffix: List=[]) -> str:
         os.makedirs(output_folder, exist_ok=True)
         filename = '{}_' * (len(suffix)+1)
         filename = filename.format(
-            'webcam' if isinstance(self.source, int) else osp.splitext(self.display)[0],
+            'webcam' if isinstance(self.src, int) else osp.splitext(self.display)[0],
             *iter(suffix)
             )
         output_path = osp.join(output_folder, f'{filename[:-1]}.avi')

@@ -25,34 +25,34 @@ class DeepSort(object):
             n_init=n_init
         )
 
-    def update(self, bbox_tlwh, rgb_img, debug=False):
+    def predict(self, rgb_img, predictions, debug=False):
         """Update tracker state via analyis of current keypoint's bboxes with previous tracked bbox.
         args:
-            bbox_tlwh (list): list of keypoints bboxes, (xmin, ymin, w, h)
-            img (np.ndarray): original rgb image
+            predictions (list): list of annotations object with keypoints bboxes, (xmin, ymin, w, h).
+            img (np.ndarray): original rgb image.
         return:
-            matches (list[dict]): list of tracking result containing dict as below
-                - track_id (int): track id
-                - track_bbox (list[float]): tracked bbox (xmin,ymin,xmax,ymax)
-                - detection_index (int): keypoint bbox index, useful for drawing keypoints.
+            tracked_predictions (list): Filtered tracked list of annotations object filled with
+                    tracked id, tracked color and bbox (top,left,btm,right) attributes.
+            debug_img (np.ndarray or None)
         """
 
         # generate detections
+        bbox_tlwh = np.array([pred.bbox for pred in predictions])
         bbox_tlbr = self.tlwh_to_tlbr(bbox_tlwh)
         features = self._get_features(bbox_tlbr, rgb_img)
         detections = [Detection(bbox, features[i]) for i, bbox in enumerate(bbox_tlwh)]
 
-        self.tracker.matches = []
-        # update tracker
-        self.tracker.predict() # update track_id's time_since_update and hit increasement
-        self.tracker.update(detections)
-
+        # update tracker and predictions object
+        self.tracker.predict() # update track_id's time_since_update and age increasement
+        self.tracker.update(detections, predictions) # update predictions with tracked ID and Color
+        # filter untracked persons' keypoints
+        tracked_predictions = list(filter(lambda x: x.id, predictions))
         if debug:
             debug_img = rgb_img[...,::-1].copy()
             self.debug_bboxes(debug_img, self.tracker.tracks, bbox_tlbr)
-            return self.tracker.matches, debug_img
+            return tracked_predictions, debug_img
 
-        return self.tracker.matches, None
+        return tracked_predictions, None
 
     def increment_ages(self):
         self.tracker.increment_ages()

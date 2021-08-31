@@ -43,36 +43,37 @@ class MultiPersonClassifier(object):
         for recognizing actions of multiple people.
     '''
 
-    def __init__(self, model_path, classes, window_size=5):
+    def __init__(self, model_path, classes, window_size=5, threshold=0.7):
 
         self.dict_id2clf = {}  # human id -> classifier of this person
         if isinstance(model_path, (list, tuple)):
             model_path = os.path.join(*model_path)
         # Define a function for creating classifier for new people.
         self._create_classifier = lambda human_id: ClassifierOnlineTest(
-            model_path, classes, window_size, human_id)
+            model_path, classes, window_size, human_id, threshold=threshold)
 
-    def classify(self, dict_id2skeleton):
+    def classify(self, predictions):
         ''' Classify the action type of each skeleton in dict_id2skeleton '''
 
+        dict_id2skeleton = {pred.id: pred.flatten_keypoints for pred in predictions}
         # Clear people not in view
         old_ids = set(self.dict_id2clf)
         cur_ids = set(dict_id2skeleton)
-        humans_not_in_view = list(old_ids - cur_ids)
+        humans_not_in_view = list(old_ids - cur_ids) # check person is missed or not
         for human in humans_not_in_view:
             del self.dict_id2clf[human]
 
         # Predict each person's action
-        id2label = {}
-        for id, skeleton in dict_id2skeleton.items():
-
+        # actions = {}
+        for idx, (id, skeleton) in enumerate(dict_id2skeleton.items()):
             if id not in self.dict_id2clf:  # add this new person
                 self.dict_id2clf[id] = self._create_classifier(id)
 
             classifier = self.dict_id2clf[id]
-            id2label[id] = classifier.predict(skeleton)  # predict label
+            # actions[id] = classifier.predict(skeleton)  # predict label
+            predictions[idx].action = classifier.predict(skeleton)
 
-        return id2label
+        return predictions
 
     def get_classifier(self, id):
         ''' Get the classifier based on the person id.
@@ -163,7 +164,7 @@ class ClassifierOnlineTest(object):
             self.model trained by `class ClassifierOfflineTrain`.
     '''
 
-    def __init__(self, model_path, action_labels, window_size, human_id=0):
+    def __init__(self, model_path, action_labels, window_size, human_id=0, threshold=0.7):
 
         # -- Settings
         self.human_id = human_id
@@ -173,7 +174,7 @@ class ClassifierOnlineTest(object):
             print("my Error: failed to load model")
             assert False
         self.action_labels = action_labels
-        self.THRESHOLD_SCORE_FOR_DISP = 0.5
+        self.threshold = threshold
 
         # -- Time serials storage
         self.feature_generator = FeatureGenerator(window_size)
@@ -186,22 +187,21 @@ class ClassifierOnlineTest(object):
 
     def predict(self, skeleton):
         ''' Predict the class (string) of the input raw skeleton '''
-        LABEL_UNKNOWN = ""
-        is_features_good, features = self.feature_generator.add_cur_skeleton(
-            skeleton)
+        LABEL_UNKNOWN = ['', 0]
+        is_features_good, features = self.feature_generator.add_cur_skeleton(skeleton)
 
         if is_features_good:
             # convert to 2d array
             features = features.reshape(-1, features.shape[0])
-
             curr_scores = self.model._predict_proba(features)[0]
             self.scores = self.smooth_scores(curr_scores)
 
-            if self.scores.max() < self.THRESHOLD_SCORE_FOR_DISP:  # If lower than threshold, bad
+            if self.scores.max() < self.threshold:  # If lower than threshold, bad
                 prediced_label = LABEL_UNKNOWN
             else:
                 predicted_idx = self.scores.argmax()
-                prediced_label = self.action_labels[predicted_idx]
+                prediced_label = self.action_labels[predicted_idx], self.scores.max()
+
         else:
             prediced_label = LABEL_UNKNOWN
         return prediced_label

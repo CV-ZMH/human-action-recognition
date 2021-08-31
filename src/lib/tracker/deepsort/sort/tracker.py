@@ -44,7 +44,6 @@ class Tracker:
 
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
-        self.matches = []
         self._next_id = 1
 
     def predict(self):
@@ -59,30 +58,29 @@ class Tracker:
             track.increment_age()
             track.mark_missed()
 
-    def update(self, detections):
+    def update(self, detections, predictions):
         """Perform measurement update and track management.
 
         Parameters
         ----------
         detections : List[deep_sort.detection.Detection]
             A list of detections at the current time step.
-
+        predictions : List[annoation.Annotation]
+            A list of annoations object to update the tracked person info.
         """
+
 
         # Run matching cascade.
         matches, unmatched_tracks, unmatched_detections = self._match(detections)
-        # print(matches)
         # Update track set.
-        for track_idx, detection_idx in matches:
+        for track_idx, pred_idx in matches:
             self.tracks[track_idx].update(
-                self.kf, detections[detection_idx])
+                self.kf, detections[pred_idx])
             track_id = self.tracks[track_idx].track_id
-            track_box = self.tracks[track_idx].to_tlbr()
-            self.matches.append({
-                "track_id": track_id,
-                "track_bbox": track_box,
-                "detection_index": detection_idx
-                })
+            track_box_tlbr = self.tracks[track_idx].to_tlbr()
+            # update track_id, tracked_color, tlbr_bbox of predictions object
+            predictions[pred_idx].set_tracked_id(track_id)
+            predictions[pred_idx].bbox = track_box_tlbr
 
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()

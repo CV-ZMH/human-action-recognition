@@ -322,7 +322,7 @@ class FeatureGenerator(object):
         '''
 
         x = retrain_only_body_joints(skeleton)
-        #print("skeleton", x.shape, x)
+
 
         if not ProcFtr.has_neck_and_thigh(x):
             self.reset()
@@ -344,7 +344,7 @@ class FeatureGenerator(object):
             # self._angles_deque.append(angles) # deprecate
             # self._lens_deque.append(lens) # deprecate
 
-            self._maintain_deque_size()
+            self._maintain_deque_size() # cut 10 frames
             self._pre_x = x.copy()
 
             # -- Extract features

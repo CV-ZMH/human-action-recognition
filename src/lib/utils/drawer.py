@@ -1,117 +1,126 @@
-# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
-from .commons import *
 
-def draw_frame_info(img, color='red', **kwargs):
-    """Draw texts as provided kwargs in the left corner of the frame"""
+from utils.commons import *
 
-    # add blank area in left side to display the texts
-    h, w, d = img.shape
-    blank = np.zeros((h, 200, d), dtype=np.uint8)
-    img_disp = np.hstack((blank, img))
-    # draw texts
-    color = colors[color.lower()]
-    texts = [f'{k}: {v}' for k,v in kwargs.items()]
-    y0, dy = 25, 30
-    for i, line in enumerate(texts):
-        y = y0 + i*dy
-        cv2.putText(img_disp, line, (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
-    return img_disp
+class Drawer:
+    def __init__(self, draw_points=True, draw_numbers=False, color='green', thickness=1):
+        self.draw_points = draw_points
+        self.draw_numbers = draw_numbers
+        self.color = COLORS[color]
+        self.scale = 0.6 if thickness <= 2 else 0.8
+        self.thickness = thickness
+        self.font = cv2.FONT_HERSHEY_COMPLEX
 
-def get_color_fast(idx):
-    color_pool = list(colors.values())[:-1] # no use black color for tracking bbox
-    color = color_pool[idx % len(color_pool)]
-    return color
+    def render_frame(self, image, predictions, **user_text_kwargs):
+        """Draw all persons [skeletons / tracked_id / action] annotations on image
+        in trtpose keypoint format.
+        """
+        render_frame = image.copy()
+        def _scale_keypoints(pred):
+            if pred.keypoints[..., 1:].max() <= 1:
+                pred.keypoints[..., 1:] *= render_frame.shape[:2][::-1]
+            pred.keypoints = pred.keypoints.astype(np.int16)
+            return pred
 
-def draw_frame(image, tracks, keypoints_list, actions=None, **kwargs):
-    """Draw skeleton pose, tracking id and action result on image.
-    Check kwargs in func: `draw_trtpose`
-    """
+        predictions = [_scale_keypoints(pred) for pred in predictions]
+        # draw the results
+        for pred in predictions:
+            if pred.color is not None: self.color = pred.color
+            self.draw_trtpose(render_frame, pred)
+            if pred.bbox is not None:
+                self.draw_bbox_label(render_frame, pred)
 
-    height, width = image.shape[:2]
-    thickness = 2 if height*width > (720*960) else 1
+        if len(user_text_kwargs)>0:
+            render_frame = self.add_user_text(render_frame, **user_text_kwargs)
+        return render_frame
 
-    # Draw each of the tracked skeletons and actions text
-    for track in tracks:
-        track_id = track['track_id']
-        color = get_color_fast(track_id)
+    def draw_trtpose(self, image, pred):
+        """Draw skeletons on image with trtpose keypoint format"""
 
-        # draw keypoints
-        keypoints = keypoints_list[track['detection_index']]
-        draw_trtpose(image,
-                     keypoints,
-                     thickness=thickness,
-                     line_color=color,
-                     **kwargs)
+        visibilities = []
+        # draw circle and keypoint numbers
+        for kp in pred.keypoints:
+            if kp[1]==0 or kp[2]==0:
+                visibilities.append(kp[0])
+                continue
+            if self.draw_points:
+                cv2.circle(image, (kp[1],kp[2]), self.thickness, self.color, self.thickness+2)
+            if self.draw_numbers:
+                cv2.putText(image, str(kp[0]), (kp[1],kp[2]), self.font,
+                            self.scale - 0.2, COLORS['blue'], self.thickness)
 
-        # draw track bbox
-        x1, y1, x2, y2 = map(int, track['track_bbox'])
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+        # draw skeleton connections
+        for pair in LIMB_PAIRS:
+            if pair[0] in visibilities or pair[1] in visibilities: continue
+            start, end = map(tuple, [pred.keypoints[pair[0]], pred.keypoints[pair[1]]])
+            cv2.line(image, start[1:], end[1:], self.color, self.thickness)
 
-        # draw text over rectangle background
-        label = actions.get(track_id, '') if actions else ''
-        label = '{:d}: {}'.format(track_id, label)
+    def draw_bbox_label(self, image, pred):
+        scale = self.scale - 0.1
+        x1, y1, x2, y2 = pred.bbox.astype(np.int16)
+        # draw person bbox
+        cv2.rectangle(image, (x1,y1), (x2,y2), self.color, self.thickness)
 
-        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_COMPLEX, 0.8, thickness)[0]
-        yy = (y1 - t_size[1] - 6, y1 - t_size[1] + 14) if y1 - t_size[1] - 5 > 0 \
-            else (y1 + t_size[1] + 6, y1 + t_size[1])
+        def get_label_position(label, is_track=False):
+            w, h = cv2.getTextSize(label, self.font, scale, self.thickness)[0]
+            offset_w, offset_h = w + 3, h + 5
+            xmax = x1 + offset_w
+            is_upper_pos = True
+            if (y1 - offset_h) < 0 or is_track:
+                ymax = y1 + offset_h
+                y_text = ymax - 2
+            else:
+                ymax = y1 - offset_h
+                y_text = y1 - 2
+                is_upper_pos = False
+            return xmax, ymax, y_text, is_upper_pos
 
-        cv2.rectangle(image, (x1, y1), (x1 + t_size[0]+1, yy[0]), color, -1)
-        cv2.putText(image, label, (x1, yy[1]),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.8, colors['black'], thickness)
+        if pred.id:
+            track_label = f'{pred.id}'
+            *track_loc, is_upper_pos = get_label_position(track_label, is_track=True)
+            cv2.rectangle(image, (x1, y1), (track_loc[0], track_loc[1]), self.color, -1)
+            cv2.putText(image, track_label, (x1+1, track_loc[2]), self.font,
+                        scale, COLORS['black'], self.thickness)
 
-def draw_persons_keypoints(image, keypoints_list, **kwargs):
-    """Draw all persons' keypoints.
-    Check kwargs in func: `draw_trtpose`
-    """
-    height, width = image.shape[:2]
-    thickness = 2 if height*width > (720*960) else 1
-    for keypoints in keypoints_list:
-        draw_trtpose(image, keypoints, thickness=thickness, **kwargs)
+            # draw text over rectangle background
+            if pred.action[0]:
+                action_label = '{}: {:.2f}'.format(*pred.action) if pred.action[0] else ''
+                if not is_upper_pos:
+                    action_label = f'{track_label}-{action_label}'
+                action_loc = get_label_position(action_label)
+                cv2.rectangle(image, (x1, y1), (action_loc[0], action_loc[1]), self.color, -1)
+                cv2.putText(image, action_label, (x1+1, action_loc[2]), self.font,
+                            scale, COLORS['black'], self.thickness)
 
-def draw_trtpose(image,
-                 keypoints,
-                 thickness=2,
-                 draw_points=True,
-                 draw_numbers=False,
-                 skip_from=-1,
-                 line_color=(0,255,0)):
-    """Draw keypoints and their connections as trtpose format"""
 
-    visibilities = []
-    centers = {}
-    # draw points on image
-    for kp in keypoints:
-        if kp[1]==0 or kp[2]==0:
-            visibilities.append(kp[0])
-            continue
-        center = int(kp[1] * image.shape[1] + 0.5) , int(kp[2] * image.shape[0] + 0.5)
-        centers[kp[0]] = center
-        if draw_points:
-            cv2.circle(image, center, thickness, points_color[int(kp[0])], thickness+2)
-        if draw_numbers:
-            cv2.putText(image, str(int(kp[0])), center, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                    0.8 if thickness==1 else 1, colors['red'], 1)
+    def add_user_text(self, image, text_color='red', add_blank=True, **user_text):
+        h, w, d = image.shape
+        if add_blank:
+            size = (h, 200, d) if h > w/1.5 else (200, w, d)
+            blank = np.zeros(size, dtype=np.uint8)
+            image = np.hstack((blank, image)) if h > w/1.5 else np.vstack((blank, image))
+        # draw texts
+        if len(user_text) > 0:
+            x, y0, dy = 5, 25, 30
+            cnt = 0
+            for key, value in user_text.items():
+                text = f'{key}: {value}'
+                y = y0 + cnt * dy
+                if y > 200 and h < w/1.5 and add_blank:
+                    cnt = 0
+                    x = w // 2
+                    y = y0 + cnt * dy
+                cnt += 1
+                cv2.putText(image, text, (x, y), cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                            1, COLORS[text_color], 2)
+        return image
 
-     # draw line on image
-    for pair_idx, pair in enumerate(limb_pairs):
-        if pair[0] < skip_from or pair[1] < skip_from: continue
-        if pair[0] in visibilities or pair[1] in visibilities: continue
-        if isinstance(line_color, str):
-            cv2.line(image, centers[pair[0]], centers[pair[1]], colors[line_color], thickness)
-        else:
-            cv2.line(image, centers[pair[0]], centers[pair[1]], line_color, thickness)
-
-def plot_confusion_matrix(y_true, y_pred, classes,
-                          normalize=False,
-                          title=None,
-                          cmap=plt.cm.Blues,
-                          size=None):
+def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, cmap=plt.cm.Blues, size=None):
     """ (Copied from sklearn website)
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.

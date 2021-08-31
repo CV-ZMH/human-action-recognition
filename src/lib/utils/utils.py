@@ -20,30 +20,31 @@ def keypoints_to_skeletons_list(all_keypoints):
     return skeletons_list
 
 def trtpose_to_openpose(keypoints_list):
-    """Change trtpose skeleton to openpose format."""
+    """Change trtpose skeleton to openpose format"""
+
     new_keypoints = keypoints_list.copy()
     if new_keypoints.tolist():
-        for idx1, idx2 in openpose_trtpose_match_idx:
+        for idx1, idx2 in OPENPOSE_TO_TRTPOSE_IDXS:
             new_keypoints[:, idx1, 1:] = keypoints_list[:, idx2, 1:] # neck
     return new_keypoints
 
-def convert_to_skeletons(keypoints_list):
+def convert_to_openpose_skeletons(predictions): # TODO move to annotation class method
     """Prepare trtpose keypoints for action recognition.
     First, convert openpose keypoints format from trtpose keypoints for
     action recognition as it's features extraction step is based on
     openpose keypoint format.
     Then, changed to skeletons list.
     """
+    keypoints_list = np.array([pred.keypoints for pred in predictions])
     openpose_keypoints = trtpose_to_openpose(keypoints_list)
-    skeletons_list = []
     NaN = 0
-    for keypoints in openpose_keypoints:
-        skeleton = [NaN]*(18*2)
-        for idx, kp in enumerate(keypoints):
-            skeleton[2*idx] = kp[1]
-            skeleton[2*idx+1] = kp[2]
-        skeletons_list.append(skeleton)
-    return skeletons_list
+    for i, keypoints in enumerate(openpose_keypoints):
+        skeletons = [NaN]*(18*2)
+        for j, kp in enumerate(keypoints):
+            skeletons[2*j] = kp[1]
+            skeletons[2*j+1] = kp[2]
+        predictions[i].flatten_keypoints = skeletons
+    return predictions
 
 def expand_bbox(xmin, xmax, ymin, ymax, img_width, img_height):
     """expand bbox for containing more background"""
