@@ -45,12 +45,10 @@ This is the 3 steps multi-person action recognition pipeline. But it achieves re
 
 > Overview of Action Recognition Pipeline  
 ![](assets/Program_flow.png)
-
-You can easily add different pose estimation, tracker and action recognizer by referencing the code structure of the pipeline. I will also add others for better action recognition and tracking result.  
+ 
 
 Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
-:exclamation: Since this action dataset is captured from 1 view point and acted by 1 person, the action classifier result is not so good in different view points.
-
+:exclamation:  
 > Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
 
 <table style="width:100%; table-layout:fixed;">
