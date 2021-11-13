@@ -13,6 +13,8 @@
 
 :boom: Added current frame details and config parameters in left side of the display.
 
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=CV-ZMH.human-action-recognition)
+
 
 Table of Contents
 =================
@@ -275,10 +277,10 @@ cd src && python train_reid.py --config ../configs/train_reid.yaml
 - [Aligned Reid Network](https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch)
 
 # TODO  
-- [x] Add FPS of current frame.
 - [x] Add different reid network used in DeepSort
 - [x] Add tensorrt for reid model
-- [ ] Add open_pifpaf pose estimation
-- [ ] Add centertrack tracker
-- [ ] Add other action recognition network.
-- [ ] Train on different datasets, loss strategies, reid networks for deepsort tracking.
+- [ ] Add more pose estimation models
+- [ ] Add more tracking methods
+- [ ] Add more action recognition models
+
+                
