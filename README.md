@@ -8,11 +8,7 @@
 :boom: Added trained weight of **siamesenet** networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
-
-:boom: Fixed deepsort bbox input format as *xmin, ymin, xmax, ymax*.
-
-:boom: Added current frame details and config parameters in left side of the display.
-
+ 
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=CV-ZMH.human-action-recognition)
 
 
