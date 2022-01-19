@@ -48,9 +48,10 @@ def main():
     window_size = cfg.window_size
 
     ## IO folder
-    src_skeletons_txt = os.path.join(*cfg_stage.input.skeletons_txt)
-    dst_features_X = os.path.join(*cfg_stage.output.features_x)
-    dst_features_Y = os.path.join(*cfg_stage.output.features_y)
+    get_path = lambda x: os.path.join(*x) if isinstance(x, (list, tuple)) else x
+    src_skeletons_txt = get_path(cfg_stage.input.skeletons_txt)
+    dst_features_X = get_path(cfg_stage.output.features_x)
+    dst_features_Y = get_path(cfg_stage.output.features_y)
 
     # Load data
     X0, Y0, video_indices = load_skeleton_data(src_skeletons_txt, classes)
@@ -64,7 +65,6 @@ def main():
 
     # Save data
     print("\nWriting features and labesl to disk ...")
-
     os.makedirs(os.path.dirname(dst_features_X), exist_ok=True)
     os.makedirs(os.path.dirname(dst_features_Y), exist_ok=True)
 

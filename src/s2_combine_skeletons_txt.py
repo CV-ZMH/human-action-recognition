@@ -20,16 +20,15 @@ def skeleton_loader(files):
             skeleton_data = json.load(f)
         yield skeleton_data
 
-# -- Main
 def main():
-
     # Settings
     cfg = Config(config_file='../configs/train_action_recogn_pipeline.yaml')
     cfg_state = cfg[os.path.basename(__file__)]
 
     ## IO folders
-    skeletons_folder = os.path.join(*cfg_state.input.skeletons_folder)
-    skeletons_txt = os.path.join(*cfg_state.output.skeletons_txt)
+    get_path = lambda x: os.path.join(*x) if isinstance(x, (list, tuple)) else x
+    skeletons_folder = get_path(cfg_state.input.skeletons_folder)
+    skeletons_txt = get_path(cfg_state.output.skeletons_txt)
 
     ## Config for training
     idx_person = 0  # Only use the skeleton of the 0th person in each image

@@ -62,8 +62,9 @@ def main():
     cfg_stage = cfg[os.path.basename(__file__)]
     classes = np.array(cfg.classes)
 
-    src_features_X = os.path.join(*cfg_stage.input.features_x)
-    src_features_Y = os.path.join(*cfg_stage.input.features_y)
+    get_path = lambda x: os.path.join(*x) if isinstance(x, (list, tuple)) else x
+    src_features_X = get_path(cfg_stage.input.features_x)
+    src_features_Y = get_path(cfg_stage.input.features_y)
     dst_model_path = cfg_stage.output.model_path
 
     # -- Load preprocessed data
