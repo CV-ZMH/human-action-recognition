@@ -25,16 +25,14 @@ def get_args():
     ap.add_argument('--source',
                     default='/home/zmh/Desktop/HDD/Test_Videos/fun_theory_2.mp4',
                     help='input source for pose estimation, if None, it wiil use webcam by default')
+
     # save path and visualization info
     ap.add_argument('--save_folder', type=str, default='../output',
                     help='just need output folder, not filename. if None, result will not save.')
     ap.add_argument('--draw_kp_numbers', action='store_true',
-                    default=False,
-                    help='draw keypoints numbers of each person')
+                    default=False, help='draw keypoints numbers when rendering results')
     ap.add_argument('--debug_track', action='store_true',
-                    default=True,
-                    help='show and save for tracking bbox and detection bbox')
-
+                    default=True, help='visualize tracker algorithm with bboxes')
     return ap.parse_args()
 
 def get_suffix(args, cfg):
@@ -75,73 +73,66 @@ def main():
         # MaxIoU: cfg.TRACKER.max_iou_distance,
     }
 
-    try:
-        # loop over the video frames
-        for bgr_frame in video:
-            rgb_frame = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
-            # predict pose estimation
-            start_pose = time.time()
-            predictions = pose_estimator.predict(rgb_frame, get_bbox=True) # return annotation object list which include keypoints in trtpose order, bboxes (x,y,w,h)
-            # end_pose = time.time() - start_pose
-            # if no keypoints, update tracked's time_since_update and it's age
-            if len(predictions) == 0 and args.task != 'pose':
-                debug_img = bgr_frame
-                tracker.increment_ages()
-            else:
-                # draw keypoints only if task is 'pose'
-                if args.task != 'pose':
-                    # Tracking
-                    # start_track = time.time()
-                    predictions = utils.convert_to_openpose_skeletons(predictions)
-                    predictions, debug_img = tracker.predict(rgb_frame, predictions,
-                                                                    debug=args.debug_track)
-                    # end_track = time.time() - start_track
+    # loop over the video frames
+    for bgr_frame in video:
+        rgb_frame = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
+        # predict pose estimation
+        start_pose = time.time()
+        predictions = pose_estimator.predict(rgb_frame, get_bbox=True) # return predictions which include keypoints in trtpose order, bboxes (x,y,w,h)
+        # if no keypoints, update tracker's memory and it's age
+        if len(predictions) == 0 and args.task != 'pose':
+            debug_img = bgr_frame
+            tracker.increment_ages()
+        else:
+            # draw keypoints only if task is 'pose'
+            if args.task != 'pose':
+                # Tracking
+                # start_track = time.time()
+                predictions = utils.convert_to_openpose_skeletons(predictions)
+                predictions, debug_img = tracker.predict(rgb_frame, predictions,
+                                                                debug=args.debug_track)
+                # end_track = time.time() - start_track
 
-                    # Action Recognition
-                    if len(predictions) > 0 and args.task == 'action':
-                        predictions = action_classifier.classify(predictions)
+                # Action Recognition
+                if len(predictions) > 0 and args.task == 'action':
+                    predictions = action_classifier.classify(predictions)
 
-            end_pipeline = time.time() - start_pose
-            # add user's desired text on render image
-            user_text.update({
-                'Frame': video.frame_cnt,
-                'Speed': '{:.1f}ms'.format(end_pipeline*1000),
-            })
-            # draw predicted results on bgr_img with frame info
-            render_image = drawer.render_frame(bgr_frame, predictions, **user_text)
+        end_pipeline = time.time() - start_pose
+        # add user's desired text on render image
+        user_text.update({
+            'Frame': video.frame_cnt,
+            'Speed': '{:.1f}ms'.format(end_pipeline*1000),
+        })
 
-            if video.frame_cnt == 1 and args.save_folder:
-                # initiate writer for saving rendered video.
-                output_suffix = get_suffix(args, cfg)
-                output_path = video.get_output_file_path(
-                    args.save_folder, suffix=output_suffix)
-                writer = video.get_writer(render_image, output_path, fps=30)
+        # draw predicted results on bgr_img with frame info
+        render_image = drawer.render_frame(bgr_frame, predictions, **user_text)
 
-                if args.debug_track and args.task != 'pose':
-                    debug_output_path = output_path[:-4] + '_debug.avi'
-                    debug_writer = video.get_writer(debug_img, debug_output_path)
-                print(f'[INFO] Saving video to : {output_path}')
+        if video.frame_cnt == 1 and args.save_folder:
+            # initiate writer for saving rendered video.
+            output_suffix = get_suffix(args, cfg)
+            output_path = video.get_output_file_path(
+                args.save_folder, suffix=output_suffix)
+            writer = video.get_writer(render_image, output_path, fps=30)
 
             if args.debug_track and args.task != 'pose':
+                debug_output_path = output_path[:-4] + '_debug.avi'
+                debug_writer = video.get_writer(debug_img, debug_output_path)
+            print(f'[INFO] Saving video to : {output_path}')
+        # show frames
+        try:
+            if args.debug_track and args.task != 'pose':
                 debug_writer.write(debug_img)
-                key = video.show(debug_img, winname='debug_tracking')
+                utils.show(debug_img, window='debug_tracking')
             if args.save_folder:
                 writer.write(render_image)
-
-            key = video.show(
-                render_image,
-                winname='webcam' if isinstance(source, int) else osp.basename(source)
-            )
-            if key == ord('q') or key == 27:
-                break
-
-        if args.debug_track and args.task != 'pose':
-            debug_writer.release()
-        if args.save_folder and len(predictions) > 0:
-            writer.release()
-
-    finally:
-        video.stop()
+            utils.show(render_image, window='webcam' if isinstance(source, int) else osp.basename(source))
+        except StopIteration:
+            break
+    if args.debug_track and args.task != 'pose':
+        debug_writer.release()
+    if args.save_folder and len(predictions) > 0:
+        writer.release()
+    video.stop()
 
 if __name__ == '__main__':
     main()
