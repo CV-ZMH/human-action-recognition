@@ -1,5 +1,33 @@
 # Simple Real Time Multi Person Action Recognition  
 
+> Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
+
+<table style="width:100%; table-layout:fixed;">
+ <tr>
+    <td><img width="448" height="224" src="assets/aung_la.gif"></td>
+    <td><img width="448" height="224" src="assets/aung_la_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Fight scene demo<font></td>
+    <td align="center"><font size="1">Fight scene debug demo<font></td>   
+ </tr>
+ <tr>
+    <td><img width="448" height="224" src="assets/fun_theory.gif"></td>
+    <td><img width="448" height="224" src="assets/fun_theory_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Street scene demo<font></td>
+    <td align="center"><font size="1">Street scene debug demo<font></td>   
+ </tr>
+ <tr>
+    <td><img width="448" height="224" src="assets/street_walk.gif"></td>
+    <td><img width="448" height="224" src="assets/street_walk_debug.gif"></td>
+ </tr>
+ <tr>
+    <td align="center"><font size="1">Street walk demo<font></td>
+    <td align="center"><font size="1">Street walk debug demo<font></td>   
+ </tr>
+</table>
 # News
 :boom: Added tensorrt conversion script for reid models.
 
@@ -8,7 +36,7 @@
 :boom: Added trained weight of **siamesenet** networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
 
 :boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
- 
+
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=CV-ZMH.human-action-recognition)
 
 
@@ -43,40 +71,9 @@ This is the 3 steps multi-person action recognition pipeline. But it achieves re
 
 > Overview of Action Recognition Pipeline  
 ![](assets/Program_flow.png)
- 
+
 
 Action classifier is used from [this repo](https://github.com/felixchenfy/Realtime-Action-Recognition#diagram) and his dataset also.
-:exclamation:  
-> Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
-
-<table style="width:100%; table-layout:fixed;">
- <tr>
-    <td><img width="448" height="256" src="assets/aung_la.gif"></td>
-    <td><img width="448" height="256" src="assets/aung_la_debug.gif"></td>
- </tr>
- <tr>
-    <td align="center"><font size="1">Fight scene demo<font></td>
-    <td align="center"><font size="1">Fight scene debug demo<font></td>   
- </tr>
- <tr>
-    <td><img width="448" height="256" src="assets/fun_theory.gif"></td>
-    <td><img width="448" height="256" src="assets/fun_theory_debug.gif"></td>
- </tr>
- <tr>
-    <td align="center"><font size="1">Street scene demo<font></td>
-    <td align="center"><font size="1">Street scene debug demo<font></td>   
- </tr>
- <tr>
-    <td><img width="448" height="256" src="assets/street_walk.gif"></td>
-    <td><img width="448" height="256" src="assets/street_walk_debug.gif"></td>
- </tr>
- <tr>
-    <td align="center"><font size="1">Street walk demo<font></td>
-    <td align="center"><font size="1">Street walk debug demo<font></td>   
- </tr>
-</table>
-
-
 
 # Inference Speed
 Tested PC specification
@@ -278,5 +275,3 @@ cd src && python train_reid.py --config ../configs/train_reid.yaml
 - [ ] Add more pose estimation models
 - [ ] Add more tracking methods
 - [ ] Add more action recognition models
-
-                
