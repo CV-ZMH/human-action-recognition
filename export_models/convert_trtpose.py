@@ -40,8 +40,7 @@ def main(config, save_name=None):
     cfg = Config(config)
     pose_kwargs = cfg.POSE
     model_path = pose_kwargs.model_path
-    model_path = model_path if not isinstance(model_path, (tuple, list)) \
-        else os.path.join(*model_path)
+    model_path = model_path if not isinstance(model_path, (tuple, list)) else os.path.join(*model_path)
 
     assert not model_path.endswith(".trt"), f'model file must be pytorch weight, \n{model_path}'
     export_trt = ExportTrt(**pose_kwargs)
