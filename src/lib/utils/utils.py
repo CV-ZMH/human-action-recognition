@@ -1,11 +1,61 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 import mimetypes
+import pathlib
 from pathlib import Path
 from typing import Iterable
+
+import torch
 import cv2
 import numpy as np
 from .commons import *
+
+import myutils
+
+
+to_min = lambda x: f"{int(x // 60)}m {x % 60:.3f}s"
+def exec_time(func):
+    def inner(*args, **kwargs):
+        start = time.time()
+        res = func(*args, **kwargs)
+        end = time.time()
+        print(f'=> Speed of [{func.__name__}] func : {to_min(end-start)}')
+        return res
+    return inner
+
+def stack(img):
+    if isinstance(img, (str, pathlib.PosixPath)): img = cv2.imread(str(img))
+    return np.stack([img]*3, axis=-1) if img.ndim == 2 else img
+
+def show(imgs, wait=0, window='show', text=None, text_pos=[]):
+    if isinstance(imgs, torch.Tensor):
+        imgs = imgs.cpu().detach().squeeze().permute(1,2,0).numpy()
+    elif isinstance(imgs, (str, pathlib.PosixPath)): # is path
+        assert os.path.exists(imgs), f'File not exists {imgs}'
+        imgs = cv2.imread(str(imgs))
+    elif isinstance(imgs, (list, tuple)):
+        imgs = [stack(img) for img in imgs]
+        imgs = np.concatenate([*imgs], axis=1) # horizonal concat
+    image = imgs.copy()
+    cv2.namedWindow(window, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+    if text:
+        draw_text(image, str(text), pos=text_pos)
+    cv2.imshow(window, image)
+    key = cv2.waitKey(wait)
+    if not wait: cv2.destroyWindow(window)
+    if key==27 or key==ord('q') or key==ord(' '): raise StopIteration
+    if text: return image
+
+def draw_text(image, text, pos=[], scale=1.4, size=2, color=(0,255,0)):
+    if len(pos) == 0:
+        h, w = image.shape[:2]
+        pos = ((w//2)-80, 20)
+    text_size, _ = cv2.getTextSize(text, 0, scale, size)
+    cv2.line(image, pos, (pos[0]+text_size[0], pos[1]), (0,0,200), text_size[1]+14)
+    cv2.line(image, pos, (pos[0]+text_size[0], pos[1]), (10,10,10), text_size[1]+10)
+    cv2.putText(image, str(text), (pos[0], pos[1]+4), 0, scale, color, size)
+
 
 def keypoints_to_skeletons_list(all_keypoints):
     """Get skeleton data of (x, y) from humans."""
