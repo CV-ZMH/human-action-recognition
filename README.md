@@ -1,4 +1,14 @@
 # Simple Real Time Multi Person Action Recognition  
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=CV-ZMH.human-action-recognition)
+
+# News
+:boom: Added tensorrt conversion script for reid models.
+
+:boom: Added reid models which are trained on mars and market1501 datasets.
+
+:boom: Added trained weight of **siamesenet** networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
+
+:boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
 
 > Pretrained actions, total 9 classes : **['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']**
 
@@ -28,16 +38,6 @@
     <td align="center"><font size="1">Street walk debug demo<font></td>   
  </tr>
 </table>
-# News
-:boom: Added tensorrt conversion script for reid models.
-
-:boom: Added reid models which are trained on mars and market1501 datasets.
-
-:boom: Added trained weight of **siamesenet** networks and training script for reid model. They are used in cosine metric learnings of deep sort pipeline.
-
-:boom: Added debug-tracker flag to `demo.py` script for visualizing tracker bboxes and keypoints bboxes. So, you can easily learn by visualizing how the tracker algorithm works.
-
-![visitors](https://visitor-badge.laobi.icu/badge?page_id=CV-ZMH.human-action-recognition)
 
 
 Table of Contents
