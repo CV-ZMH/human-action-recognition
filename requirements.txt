@@ -5,7 +5,6 @@ tabulate
 tqdm
 matplotlib
 numpy
-pillow
 pyyaml
 rich
 termcolor
