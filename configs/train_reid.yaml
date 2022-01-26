@@ -1,6 +1,6 @@
 DATASET:
     name: market # market, mars
-    data_path: &data_path /home/zmh/hdd/Custom_Projects/object_tracking/datasets/Market_1501
+    data_path: &data_path ../datasets/Market_1501
     workers: 1
 
     img_size:

@@ -2,7 +2,7 @@ classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave
 
 img_format: "{:05d}.jpg" # dataset image extensions
 window_size: 5 # Number of adjacent frames for extracting features.
-data_root: &data_root /home/zmh/hdd/Custom_Projects/action_recognition/datasets/realtime_action_recognition # main dataset path
+data_root: &data_root ../datasets/realtime_action_recognition # set your dataset path
 extract_path: &extract_path extracted_data/raw_skeletons_512/ # main dataset path/ extracted path
 
 s1_extract_trtpose_skeletons.py:
