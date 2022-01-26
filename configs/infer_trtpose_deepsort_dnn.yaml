@@ -1,15 +1,15 @@
-weight_root: &weight_root /home/zmh/Desktop/HDD/Workspace/dev/human-action-recognition/weights
+weight_root: &weight_root ../weights
 
 # for pose estimation
 POSE:
-  name: 'trtpose'
+  name: trtpose
   size: 256 # height, width
   backbone: densenet121
   model_path:
     - *weight_root
     - pose_estimation
     - trtpose
-    - densenet121_baseline_att_256x256_B_epoch_160_256x256.trt # change if you convert tensorrt model
+    - densenet121_baseline_att_256x256_B_epoch_160.pth # change if you convert tensorrt model
   ## below settings are needed to filter bad(fewer) person keypoints
   min_total_joints: 5
   min_leg_joints: 1
@@ -36,8 +36,8 @@ TRACKER:
 CLASSIFIER:
   ## custom model
   name: "dnn"
-  classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave']
-  window_size: 5 # 5, 8
+  classes: ['stand', 'walk', 'run', 'jump', 'sit', 'squat', 'kick', 'punch', 'wave'] ## change with your custom classes
+  window_size: 5 # 5
   threshold: 0.5
   model_path:
      - *weight_root
