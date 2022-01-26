@@ -4,10 +4,11 @@ import time
 import torch
 torch.tensor(1, device='cuda') # temp fix for pycuda gpu allocation conflict
 import numpy as np
-import pycuda.driver as cuda
-import pycuda.autoinit
-import tensorrt as trt
-
+try:
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    import tensorrt as trt
+except: print("pycuda or tensorrt not installed.")
 from PIL import Image
 from torchvision import transforms
 

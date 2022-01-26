@@ -3,7 +3,8 @@ import json
 from collections import OrderedDict
 
 import torch
-import torch2trt
+try: import torch2trt
+except: print('torch2trt not installed.')
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
@@ -67,7 +68,6 @@ class TrtPose:
 
     def _load_trt_model(self, model_file):
         """load converted tensorRT model"""
-
         print(f'[INFO] Loading TensorRT trtpose model : {model_file}')
         model_trt = torch2trt.TRTModule()
         model_trt.load_state_dict(torch.load(model_file))
